@@ -6,7 +6,8 @@ def classCommands(editor):
         case 'add':
             pass
         case 'delete':
-            pass
+            name = input('  Class to Delete: ')
+            editor.classDelete(name)
         case 'rename':
             pass
         case _:
@@ -35,7 +36,7 @@ def attributeCommands(editor):
             print('Print an error here')
 
 if __name__ == '__main__':
-    editor = Editor
+    editor = Editor()
     quit = False
     while not quit:
         command = input('Enter UML Command: ')
