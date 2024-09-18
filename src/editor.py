@@ -1,5 +1,7 @@
 class Editor:
-    classes = {}
+    def __init__(self):
+        self.classes = {}
+
     def classAdd(self, name):
         pass
     def classDelete(self, name):
