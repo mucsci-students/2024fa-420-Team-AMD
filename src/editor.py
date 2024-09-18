@@ -14,6 +14,6 @@ class Editor:
         if name in self.classes:
             self.classes[rename] = self.classes.pop(name)
         elif rename in self.classes:
-            print(f"{rename} is an already existing class.")
+            print(f'{rename} is an already existing class.')
         else: 
-            print(f"{rename} does not exist.")
+            print(f'{rename} does not exist.')
