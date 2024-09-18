@@ -3,8 +3,10 @@ from editor import *
 def classCommands(editor):
     command = input('  Enter Class Command: ')
     match command:
+        #if command is 'add' it will promt for a name and attempt to create a new class of that name#
         case 'add':
-            pass
+            name = input('  Enter class name  ')
+            classAdd(name)
         case 'delete':
             pass
         case 'rename':
@@ -35,7 +37,7 @@ def attributeCommands(editor):
             print('Print an error here')
 
 if __name__ == '__main__':
-    editor = Editor
+    editor = Editor()
     quit = False
     while not quit:
         command = input('Enter UML Command: ')
