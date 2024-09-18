@@ -28,7 +28,7 @@ class testEditor(unittest.TestCase):
         result = editor.classRename('Bar', 'Foo2')
         assert result == False, 'Bar does not exist, rename failed'
     
-    def testClassREnameFailure2(self):
+    def testClassRenameFailure2(self):
         editor = Editor()
         editor.classes['Foo'] = Class()
         editor.classes['Bar'] = Class()
