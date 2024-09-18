@@ -6,7 +6,8 @@ def classCommands(editor):
         case 'add':
             pass
         case 'delete':
-            pass
+            name = input('  Class to Delete: ')
+            editor.classDelete(name)
         case 'rename':
             name = input('  Class to change: ')
             rename = input('    New name: ')
