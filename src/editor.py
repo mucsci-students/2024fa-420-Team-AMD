@@ -1,6 +1,8 @@
 class Editor:
-    classes = {}
-    relationships = set()
+    def __init__(self):
+        self.classes = {}
+        self.relationships = set()
+
     def classAdd(self, name):
         pass
     def classDelete(self, name):
