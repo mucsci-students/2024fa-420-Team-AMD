@@ -10,7 +10,9 @@ def classCommands(editor):
             name = input('  Class to Delete: ')
             editor.classDelete(name)
         case 'rename':
-            pass
+            name = input('  Class to change: ')
+            rename = input('    New name: ')
+            editor.classRename(name, rename)
         case _:
             print('Print an error here')
 

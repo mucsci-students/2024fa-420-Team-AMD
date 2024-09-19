@@ -11,8 +11,15 @@ class Editor:
             print(f'Deleted class {name}!')
         else:
             print(f'ERROR: No class exists with the name `{name}`')
+
+    # Function to rename a class called 'name' to a class called 'rename'.
     def classRename(self, name, rename):
-        pass
+        if name in self.classes and rename not in self.classes:
+            self.classes[rename] = self.classes.pop(name)
+        elif rename in self.classes:
+            print(f'ERROR: {rename} is an already existing class. Cannot rename.')
+        else: 
+            print(f'ERROR: {rename} does not exist. Cannot rename.')
 
     # Function which adds a relationship between class1 and class2, which are both strings
     def relationshipAdd(self, class1, class2):
