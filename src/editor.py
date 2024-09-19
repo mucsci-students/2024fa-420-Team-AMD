@@ -27,3 +27,18 @@ class Editor:
             # Note the extra parenthesis as we are adding a tuple to the set
             self.relationships.add((class1, class2))
             print(f'Added relationship between {class1} and {class2}!')
+
+    # Function which deletes a relationship between class1 and class2
+    def relationshipDelete(self, class1, class2):
+        if (class1, class2) in self.relationships:
+            self.relationships.remove((class1, class2))
+            print(f'Removed relationship between {class1} and {class2}!')
+        elif (class2, class1) in self.relationships:
+            self.relationships.remove((class2, class1))
+            print(f'Removed relationship between {class2} and {class1}!')
+        elif class1 not in self.classes:
+            print(f'ERROR: class `{class1}` does not exist')
+        elif class2 not in self.classes:
+            print(f'ERROR: class `{class2}` does not exist')
+        else:
+            print(f'ERROR: there is no relationship between `{class1}` and `{class2}`')
