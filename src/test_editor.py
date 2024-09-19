@@ -22,12 +22,14 @@ class testEditor(unittest.TestCase):
         editor.classRename('Foo', 'Bar')
         assert 'Bar' in editor.classes and 'Foo' not in editor.classes, 'Foo was not renamed to Bar'
     
+    # Failure due to targeted class of renaming not existing
     def testClassRenameFailure1(self):
         editor = Editor()
         editor.classes['Foo'] = Class()
         editor.classRename('Bar', 'Foo2')
         assert 'Foo2' not in editor.classes and 'Bar' not in editor.classes, 'Bar does not exist, rename failed'
     
+    # Failure due to class of new name already existing
     def testClassRenameFailure2(self):
         editor = Editor()
         editor.classes['Foo'] = Class()
@@ -87,6 +89,15 @@ class testEditor(unittest.TestCase):
 
         editor.relationshipDelete('Foo', 'Baz')
         assert ('Foo', 'Bar') in editor.relationships and ('Foo', 'Baz') not in editor.relationships, 'Relationship should not have been removed'
+
+    def testListClasses(self):
+        editor = Editor()
+        editor.classes['Foo'] = Class()
+        editor.classes['Bar'] = Class()
+        editor.relationshipAdd('Foo', 'Bar')
+        # ADD editor.attributesAdd(class, attribute) HERE
+        
+        # NEED HELP ASSERTING PRINT OUTPUT, 'Classes and contents not successfully listed.'
 
 if __name__ == '__main__':
     unittest.main()

@@ -43,6 +43,16 @@ def attributeCommands(editor):
         case _:
             print('Print an error here')
 
+def listCommands(editor):
+    command = input('   Enter List Command: ')
+    match command:
+        case 'classes':
+            editor.listClasses()
+        case 'class':
+            pass
+        case 'relationships':
+            pass
+
 if __name__ == '__main__':
     editor = Editor()
     quit = False
@@ -60,7 +70,7 @@ if __name__ == '__main__':
             case 'load':
                 pass
             case 'list':
-                pass
+                listCommands(editor)
             case 'help':
                 pass
             case 'exit':
