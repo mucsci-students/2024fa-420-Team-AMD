@@ -59,6 +59,34 @@ class testEditor(unittest.TestCase):
         editor.classes['Foo'] = Class()
         editor.relationshipAdd('Foo', 'Bar')
         assert ('Foo', 'Bar') not in editor.relationships, 'Class was not checked for existence'
-        
+
+    def testRelationshipDeleteSuccess(self):
+        editor = Editor()
+        editor.classes['Foo'] = Class()
+        editor.classes['Bar'] = Class()
+        editor.relationships.add(('Foo', 'Bar'))
+
+        editor.relationshipDelete('Foo', 'Bar')
+        assert ('Foo', 'Bar') not in editor.relationships, 'Relationship was not deleted'
+
+    # Failure due to no relationship
+    def testRelationshipDeleteFailure1(self):
+        editor = Editor()
+        editor.classes['Foo'] = Class()
+        editor.classes['Bar'] = Class()
+
+        editor.relationshipDelete('Foo', 'Bar')
+        assert ('Foo', 'Bar') not in editor.relationships, 'Relationship should not have been removed'
+
+    # Failure due to missing classes
+    def testRelationshipDeleteFailure2(self):
+        editor = Editor()
+        editor.classes['Foo'] = Class()
+        editor.classes['Bar'] = Class()
+        editor.relationships.add(('Foo', 'Bar'))
+
+        editor.relationshipDelete('Foo', 'Baz')
+        assert ('Foo', 'Bar') in editor.relationships and ('Foo', 'Baz') not in editor.relationships, 'Relationship should not have been removed'
+
 if __name__ == '__main__':
     unittest.main()

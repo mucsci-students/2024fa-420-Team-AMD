@@ -24,6 +24,9 @@ def relationshipCommands(editor):
             class2 = input('  Second Class in Relationship: ')
             editor.relationshipAdd(class1, class2)
         case 'delete':
+            class1 = input('  First Class in Relationship to Delete: ')
+            class2 = input('  Second Class in Relationship to Delete: ')
+            editor.relationshipDelete(class1, class2)
             pass
         case _:
             print('Print an error here')
