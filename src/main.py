@@ -1,4 +1,5 @@
 from editor import *
+from classes import *
 
 def classCommands(editor):
     command = input('  Enter Class Command: ')
@@ -19,7 +20,9 @@ def relationshipCommands(editor):
     command = input('  Enter Relationship Command: ')
     match command:
         case 'add':
-            pass
+            class1 = input('  First Class in Relationship: ')
+            class2 = input('  Second Class in Relationship: ')
+            editor.relationshipAdd(class1, class2)
         case 'delete':
             pass
         case _:
