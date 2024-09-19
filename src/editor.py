@@ -14,15 +14,12 @@ class Editor:
 
     # Function to rename a class called 'name' to a class called 'rename'.
     def classRename(self, name, rename):
-<<<<<<< classRename
-        if name in self.classes:
+        if name in self.classes and rename not in self.classes:
             self.classes[rename] = self.classes.pop(name)
         elif rename in self.classes:
-            print(f'{rename} is an already existing class.')
+            print(f'ERROR: {rename} is an already existing class. Cannot rename.')
         else: 
-            print(f'{rename} does not exist.')
-=======
-        pass
+            print(f'ERROR: {rename} does not exist. Cannot rename.')
 
     # Function which adds a relationship between class1 and class2, which are both strings
     def relationshipAdd(self, class1, class2):
@@ -37,4 +34,3 @@ class Editor:
             # Note the extra parenthesis as we are adding a tuple to the set
             self.relationships.add((class1, class2))
             print(f'Added relationship between {class1} and {class2}!')
->>>>>>> develop

@@ -25,15 +25,15 @@ class testEditor(unittest.TestCase):
     def testClassRenameFailure1(self):
         editor = Editor()
         editor.classes['Foo'] = Class()
-        result = editor.classRename('Bar', 'Foo2')
-        assert result == False, 'Bar does not exist, rename failed'
+        editor.classRename('Bar', 'Foo2')
+        assert 'Foo2' not in editor.classes and 'Bar' not in editor.classes, 'Bar does not exist, rename failed'
     
     def testClassRenameFailure2(self):
         editor = Editor()
         editor.classes['Foo'] = Class()
         editor.classes['Bar'] = Class()
-        result = editor.classRename('Foo', 'Bar')
-        assert result == False, 'Foo could not be renamed Bar: Bar already exists.'
+        editor.classRename('Foo', 'Bar')
+        assert 'Foo' in editor.classes and 'Bar' in editor.classes, 'Foo could not be renamed Bar: Bar already exists.'
 
     def testRelationshipAddSuccess(self):
         editor = Editor()
