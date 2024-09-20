@@ -50,6 +50,7 @@ class Editor:
         else:
             print(f'ERROR: there is no relationship between `{class1}` and `{class2}`')
 
+    # Function that lists options and explanations for the basic commands
     def editorHelp(self):
         quit = False
         while not quit:
