@@ -62,7 +62,9 @@ if __name__ == '__main__':
             case 'list':
                 pass
             case 'help':
-                pass
+                print('Welcome to our Unified Modeling Language (UML) program! One of the following commands must be typed.')
+                print('These are valid commands: class, relationship, attribute, save, load, list, exit.')
+                editor.editorHelp()
             case 'exit':
                 pass
             case _:
