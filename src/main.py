@@ -48,6 +48,7 @@ if __name__ == '__main__':
     quit = False
     while not quit:
         command = input('Enter UML Command: ')
+        command = command.strip()
         match command:
             case 'class':
                 classCommands(editor)
