@@ -58,13 +58,6 @@ if __name__ == '__main__':
     editor = Editor()
     quit = False
     while not quit:
-        #Test
-        editor.classes['Foo'] = Class()
-        editor.classes['Bar'] = Class()
-        editor.classes['Baz'] = Class()
-        editor.relationships.add(('Foo', 'Bar'))
-        editor.relationships.add(('Foo', 'Baz'))
-
         command = input('Enter UML Command: ')
         match command:
             case 'class':
