@@ -35,9 +35,13 @@ def attributeCommands(editor):
     command = input('  Enter Attribute Command: ')
     match command:
         case 'add':
-            pass
+            classToAlter = input('  Class to add attribute to: ')
+            attributeToAdd = input('  Attribute to add: ')
+            addAttribute(classToAlter, attributeToAdd)
         case 'delete':
-            pass
+            classToAlter = input('  Class to delete attribute from: ')
+            attributeToDelete = input('  Attribute to delete: ')
+            deleteAttribute(classToAlter, attributeToDelete)
         case 'rename':
             pass
         case _:
