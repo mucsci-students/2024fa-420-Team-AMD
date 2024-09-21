@@ -39,7 +39,10 @@ def attributeCommands(editor):
         case 'delete':
             pass
         case 'rename':
-            pass
+            classTOAlter = input('  Class who\'s attrubte you would like to rename: ')
+            oldAttributeName = input('  Attribute you would like to rename: ')
+            newAttributeName = input('  Attribute name you would like to change to: ')
+            renameAttribute(classTOAlter, oldAttributeName, newAttributeName)
         case _:
             print('Print an error here')
 
