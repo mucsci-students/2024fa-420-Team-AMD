@@ -54,8 +54,12 @@ class Editor:
     def findRelationships(self, class_name):
         related_classes = []
         for relationship in self.relationships:
-            if relationship[0] == class_name or relationship[1] == class_name:
-                related_classes.append(relationship)
+            if relationship[0] == class_name:
+                if relationship[1] != class_name:
+                    related_classes.append(relationship[1])
+            elif relationship[1] == class_name:
+                if relationship[0] != class_name:
+                    related_classes.append(relationship[0])
         return related_classes
 
     # Function which lists all classes and contents of each class
@@ -68,9 +72,7 @@ class Editor:
 
             # Print the relationships that involve the current class
             if related_classes:
-                print('Relationships:')
-                for relationship in related_classes:
-                    print(f'  {relationship}')
+                print(f'Relationships: {related_classes}')
             else:
                 print('Relationships: None')
         

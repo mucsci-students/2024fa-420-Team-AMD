@@ -90,14 +90,5 @@ class testEditor(unittest.TestCase):
         editor.relationshipDelete('Foo', 'Baz')
         assert ('Foo', 'Bar') in editor.relationships and ('Foo', 'Baz') not in editor.relationships, 'Relationship should not have been removed'
 
-    def testListClasses(self):
-        editor = Editor()
-        editor.classes['Foo'] = Class()
-        editor.classes['Bar'] = Class()
-        editor.relationshipAdd('Foo', 'Bar')
-        # ADD editor.attributesAdd(class, attribute) HERE
-        
-        # NEED HELP ASSERTING PRINT OUTPUT, 'Classes and contents not successfully listed.'
-
 if __name__ == '__main__':
     unittest.main()
