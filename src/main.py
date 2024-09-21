@@ -3,7 +3,7 @@ from editor import *
 def classCommands(editor):
     command = input('  Enter Class Command: ')
     match command:
-        #if command is 'add' it will promt for a name and attempt to create a new class of that name#
+        # If command is 'add' it will promt for a name and attempt to create a new class of that name#
         case 'add':
             name = input('  Enter class name  ')
             classAdd(name)
