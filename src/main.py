@@ -43,10 +43,28 @@ def attributeCommands(editor):
         case _:
             print('Print an error here')
 
+def listCommands(editor):
+    command = input('   Enter List Command: ')
+    match command:
+        case 'classes':
+            pass
+        case 'class':
+            pass
+        case 'relationships':
+            name = input("     Class to check relationships: ")
+            editor.listRelationships(name)
+
 if __name__ == '__main__':
     editor = Editor()
     quit = False
     while not quit:
+        #Test
+        editor.classes['Foo'] = Class()
+        editor.classes['Bar'] = Class()
+        editor.classes['Baz'] = Class()
+        editor.relationships.add(('Foo', 'Bar'))
+        editor.relationships.add(('Foo', 'Baz'))
+
         command = input('Enter UML Command: ')
         match command:
             case 'class':
@@ -60,7 +78,7 @@ if __name__ == '__main__':
             case 'load':
                 pass
             case 'list':
-                pass
+                listCommands(editor)
             case 'help':
                 pass
             case 'exit':
