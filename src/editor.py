@@ -185,7 +185,7 @@ class Editor:
                 print('Relationships: None')
 
             # Then, print all attributes
-            if self.classes[class_name].attributes:
+            if self.classes[class_name].attributtesSets:
                 print('Attributes:')
                 for attribute in self.classes[class_name].attributtesSets:
                     print(f'  {attribute}')
