@@ -22,12 +22,14 @@ class testEditor(unittest.TestCase):
         editor.classRename('Foo', 'Bar')
         assert 'Bar' in editor.classes and 'Foo' not in editor.classes, 'Foo was not renamed to Bar'
     
+    # Failure due to targeted class of renaming not existing
     def testClassRenameFailure1(self):
         editor = Editor()
         editor.classes['Foo'] = Class()
         editor.classRename('Bar', 'Foo2')
         assert 'Foo2' not in editor.classes and 'Bar' not in editor.classes, 'Bar does not exist, rename failed'
     
+    # Failure due to class of new name already existing
     def testClassRenameFailure2(self):
         editor = Editor()
         editor.classes['Foo'] = Class()

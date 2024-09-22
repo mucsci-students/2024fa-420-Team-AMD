@@ -56,7 +56,7 @@ def listCommands(editor):
     command = input('   Enter List Command: ')
     match command:
         case 'classes':
-            pass
+            editor.listClasses()
         case 'class':
             name = input('  Enter class: ')
             editor.listClass(name)

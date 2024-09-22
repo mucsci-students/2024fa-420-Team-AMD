@@ -57,6 +57,11 @@ class Editor:
             print(f'ERROR: class `{class2}` does not exist')
         else:
             print(f'ERROR: there is no relationship between `{class1}` and `{class2}`')
+
+    # Function which lists all classes and contents of each class
+    def listClasses(self):
+        for class_name in self.classes:
+            self.listClass(class_name)
     
     # Function renames given attribute in given class if both exist and new name does not
     def renameAttribute(self, class1, attribute1, attribute2):
