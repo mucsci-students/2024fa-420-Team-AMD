@@ -95,7 +95,7 @@ class Editor:
             # Then, print all attributes
             if self.classes[class_name].attributes:
                 print('Attributes:')
-                for attribute in self.classes[class_name].attributes:
+                for attribute in self.classes[class_name].attributtesSets:
                     print(f'  {attribute}')
             else:
                 print('Attributes: None')            
