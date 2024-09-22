@@ -4,7 +4,7 @@ class Editor:
     def __init__(self):
         self.classes = {}
         self.relationships = set()
-/
+
     def classAdd(self, name):
         if name in self.classes:
             print(f'Class {name} already exists')
@@ -57,6 +57,19 @@ class Editor:
             print(f'ERROR: class `{class2}` does not exist')
         else:
             print(f'ERROR: there is no relationship between `{class1}` and `{class2}`')
+
+
+    # Function deletes given attribute from given class if both exist
+    def deleteAttribute(self, class1, attribute1):
+        if class1 in self.classes:
+            item = self.classes[class1]
+            if attribute1 in item.attributtesSets:
+                self.classes[class1].attributtesSets.remove(attribute1)
+                print(f'Attribute `{attribute1}` has been removed from class {class1}')
+            else:
+                print(f'Attribute `{attribute1}` does not exist in class {class1}')
+        else:
+            print(f'Class {class1} does not exist')
 
     # Fuction will check to see if class exists, and whether the given attribute does not already exists. If both parameters pass the attribute will be added to the class #
     def addAttribute(self, class1, attribute1):

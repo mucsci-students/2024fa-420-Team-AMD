@@ -41,7 +41,9 @@ def attributeCommands(editor):
             attribute1 = input('  Attribute Name: ')
             editor.addAttribute(class1, attribute1)
         case 'delete':
-            pass
+            class1 = input('  Class to delete attribute from: ')
+            attribute1 = input('  Attribute to delete: ')
+            editor.deleteAttribute(class1, attribute1)
         case 'rename':
             pass
         case _:
