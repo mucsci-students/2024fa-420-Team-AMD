@@ -44,6 +44,7 @@ def attributeCommands(editor):
             print('Print an error here')
 
 if __name__ == '__main__':
+    print('Welcome to our Unified Modeling Language (UML) program! One of the following commands must be typed.')
     editor = Editor()
     quit = False
     while not quit:
@@ -63,7 +64,6 @@ if __name__ == '__main__':
             case 'list':
                 pass
             case 'help':
-                print('Welcome to our Unified Modeling Language (UML) program! One of the following commands must be typed.')
                 print('These are valid commands: class, relationship, attribute, save, load, list, exit.')
                 editor.editorHelp()
             case 'exit':
