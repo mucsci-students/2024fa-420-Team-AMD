@@ -76,3 +76,31 @@ class Editor:
                 print(f'{relationship} ---- {class_name}')
         else:
             print(f'{class_name} does not exist.')
+
+    # Function that lists all contents of a specific class
+    def listClass(self, class_name):
+        if class_name in self.classes:
+            print(f'Class: {class_name}')
+
+            # First, print all relationships
+            related_classes = self.findRelationships(class_name)
+
+            if related_classes:
+                print('Relationships: ')
+                for relationship in related_classes:
+                    print(f'{relationship} ---- {class_name}')
+            else:
+                print('Relationships: None')
+
+            # Then, print all attributes
+            if self.classes[class_name].attributes:
+                print('Attributes:')
+                for attribute in self.classes[class_name].attributes:
+                    print(f'  {attribute}')
+            else:
+                print('Attributes: None')            
+
+            print()
+
+        else:
+            print(f'Class "{class_name}" does not exist.')         
