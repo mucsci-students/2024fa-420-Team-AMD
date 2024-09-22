@@ -76,6 +76,7 @@ if __name__ == '__main__':
             case 'help':
                 pass
             case 'exit':
-                pass
+                quit = True
+                break
             case _:
                 print('error! print some help here')
