@@ -5,8 +5,8 @@ def classCommands(editor):
     match command:
         # If command is 'add' it will promt for a name and attempt to create a new class of that name#
         case 'add':
-            name = input('  Enter class name  ')
-            classAdd(name)
+            name = input('  Class Name to Add: ')
+            editor.classAdd(name)
         case 'delete':
             pass
         case 'rename':

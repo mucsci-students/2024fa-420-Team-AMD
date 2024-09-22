@@ -1,4 +1,5 @@
-import Class
+from classes import *
+
 class Editor:
     classes = {}
     # Checks if a class of the given name already exists, if not, a new one is created
