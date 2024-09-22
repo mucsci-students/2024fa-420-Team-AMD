@@ -58,7 +58,8 @@ def listCommands(editor):
         case 'classes':
             pass
         case 'class':
-            pass
+            name = input('  Enter class: ')
+            editor.listClass(name)
         case 'relationships':
             name = input("     Class to check relationships: ")
             editor.listRelationships(name)
