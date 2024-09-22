@@ -35,7 +35,9 @@ def attributeCommands(editor):
     command = input('  Enter Attribute Command: ')
     match command:
         case 'add':
-            pass
+            class1 = input('  Class to Add Attribute To: ')
+            attribute1 = input('  Attribute Name: ')
+            editor.addAttribute(class1, attribute1)
         case 'delete':
             pass
         case 'rename':

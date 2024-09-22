@@ -52,15 +52,12 @@ class Editor:
     
     # Fuction will check to see if class exists, and whether the given attribute does not already exists. If both parameters pass the attribute will be added to the class #
     def addAttribute(self, class1, attribute1):
-        for item in self.classes:
-            if item.name == class1.name:
-                if attribute1 in item.attributtesSets:
-                    return "Attribute already exists in this class"
-                else:
-                    temp = item
-                    temp.attributtesSets.add(attribute1)
-                    self.classes.remove(item)
-                    self.classes.add(temp)
-                    return "Attribute has been added to this class"
+        if class1 in self.classes:
+            item = self.classes[class1]
+            if attribute1 in item.attributtesSets:
+                print(f'Attribute `{attribute1}` already exists in the class {class1}')
             else:
-                return "Class does not exist"
+                self.classes[class1].attributtesSets.add(attribute1)
+                print(f'Attribute `{attribute1}` has been added to class {class1}')
+        else:
+            print(f'Class {class1} does not exist')
