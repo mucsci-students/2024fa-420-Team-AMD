@@ -44,7 +44,7 @@ def attributeCommands(editor):
             print('Print an error here')
 
 if __name__ == '__main__':
-    print('Welcome to our Unified Modeling Language (UML) program! One of the following commands must be typed.')
+    print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
     editor = Editor()
     quit = False
     while not quit:
