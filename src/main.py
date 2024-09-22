@@ -4,8 +4,10 @@ from classes import *
 def classCommands(editor):
     command = input('  Enter Class Command: ')
     match command:
+        # If command is 'add' it will promt for a name and attempt to create a new class of that name#
         case 'add':
-            pass
+            name = input('  Class Name to Add: ')
+            editor.classAdd(name)
         case 'delete':
             name = input('  Class to Delete: ')
             editor.classDelete(name)

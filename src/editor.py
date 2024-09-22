@@ -1,10 +1,18 @@
+from classes import *
+
 class Editor:
     def __init__(self):
         self.classes = {}
         self.relationships = set()
-
+/
     def classAdd(self, name):
-        pass
+        if name in self.classes:
+            print(f'Class {name} already exists')
+        else:
+            newclass = Class(name)
+            self.classes[name] = newclass
+            print(f'Added class {name}!')
+        
     def classDelete(self, name):
         if name in self.classes:
             del self.classes[name]
