@@ -58,6 +58,18 @@ class Editor:
         else:
             print(f'ERROR: there is no relationship between `{class1}` and `{class2}`')
 
+    # Fuction will check to see if class exists, and whether the given attribute does not already exists. If both parameters pass the attribute will be added to the class #
+    def addAttribute(self, class1, attribute1):
+        if class1 in self.classes:
+            item = self.classes[class1]
+            if attribute1 in item.attributtesSets:
+                print(f'Attribute `{attribute1}` already exists in the class {class1}')
+            else:
+                self.classes[class1].attributtesSets.add(attribute1)
+                print(f'Attribute `{attribute1}` has been added to class {class1}')
+        else:
+            print(f'Class {class1} does not exist')
+
 
     # Function that lists options and explanations for the basic commands
     def editorHelp(self):
