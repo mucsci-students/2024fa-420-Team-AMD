@@ -78,6 +78,7 @@ if __name__ == '__main__':
                 print('These are valid commands: class, relationship, attribute, save, load, list, exit.')
                 editor.editorHelp()
             case 'exit':
-                pass
+                quit = True
+                break
             case _:
                 print('error! print some help here')
