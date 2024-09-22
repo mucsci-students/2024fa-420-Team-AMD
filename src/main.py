@@ -55,10 +55,12 @@ def listCommands(editor):
             editor.listRelationships(name)
 
 if __name__ == '__main__':
+    print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
     editor = Editor()
     quit = False
     while not quit:
         command = input('Enter UML Command: ')
+        command = command.strip()
         match command:
             case 'class':
                 classCommands(editor)
@@ -73,7 +75,8 @@ if __name__ == '__main__':
             case 'list':
                 listCommands(editor)
             case 'help':
-                pass
+                print('These are valid commands: class, relationship, attribute, save, load, list, exit.')
+                editor.editorHelp()
             case 'exit':
                 pass
             case _:
