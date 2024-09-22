@@ -52,19 +52,16 @@ class Editor:
     
     # Function renames given attribute in given class if both exist and new name does not
     def renameAttribute(self, class1, attribute1, attribute2):
-        for item in self.classes:
-            if item.name == class1.name:
-                if attribute1 in item.attributtesSets:
-                    if attribute2 not in item.attributtesSets:
-                        temp = item
-                        temp.attributtesSets.remove(attribute1)
-                        temp.attributtesSets.add(attribute2)
-                        self.classes.remove(item)
-                        self.classes.add(temp)
-                        return "Attribute has been renamed"
-                    else:
-                        return "New attribute name already exist in this class"
+        if class1 in self.classes:
+            item = self.classes[class1]
+            if attribute1 in item.attributtesSets:
+                if attribute2 not in item.attributtesSets:
+                    self.classes[class1].attributtesSets.remove(attribute1)
+                    self.classes[class1].attributtesSets.add(attribute2)
+                    print(f'Attribute `{attribute1}` renamed to {attribute2}!')
                 else:
-                    return "Attribute does not exist in this class"
+                    print(f'Attribute `{attribute2}` already exists in the class {class1}')
             else:
-                return "Class does not exist"
+                print(f'Attribute `{attribute1}` does not exist in class {class1}')
+        else:
+            print(f'Class {class1} does not exist')
