@@ -1,3 +1,4 @@
+import json
 from editor import *
 from classes import *
 
@@ -81,7 +82,20 @@ if __name__ == '__main__':
             case 'save':
                 pass
             case 'load':
-                pass
+                filename = input('  File Name to Open: ')
+
+                with open(filename, 'r') as f:
+                    data = f.read()
+                    obj = json.loads(data)
+                    for name in obj['classes']:
+                        editor.classAdd(name)
+                        for attr in obj['classes'][name]['attributes']:
+                            editor.addAttribute(name, attr)
+                    for rel in obj['relationships']:
+                        # Relationships should save tuples of a pair of class names
+                        editor.relationshipAdd(rel[0], rel[1])
+                        
+                print(f'=--> Loaded from {filename}!')
             case 'list':
                 listCommands(editor)
             case 'help':
