@@ -4,8 +4,10 @@ from classes import *
 def classCommands(editor):
     command = input('  Enter Class Command: ')
     match command:
+        # If command is 'add' it will promt for a name and attempt to create a new class of that name#
         case 'add':
-            pass
+            name = input('  Class Name to Add: ')
+            editor.classAdd(name)
         case 'delete':
             name = input('  Class to Delete: ')
             editor.classDelete(name)
@@ -35,11 +37,18 @@ def attributeCommands(editor):
     command = input('  Enter Attribute Command: ')
     match command:
         case 'add':
-            pass
+            class1 = input('  Class to Add Attribute To: ')
+            attribute1 = input('  Attribute Name: ')
+            editor.addAttribute(class1, attribute1)
         case 'delete':
-            pass
+            class1 = input('  Class to delete attribute from: ')
+            attribute1 = input('  Attribute to delete: ')
+            editor.deleteAttribute(class1, attribute1)
         case 'rename':
-            pass
+            class1 = input('  Class who\'s attrubte you would like to rename: ')
+            attribute1 = input('  Attribute you would like to rename: ')
+            attribute2 = input('  Attribute name you would like to change to: ')
+            editor.renameAttribute(class1, attribute1, attribute2)
         case _:
             print('Print an error here')
 
@@ -49,15 +58,19 @@ def listCommands(editor):
         case 'classes':
             editor.listClasses()
         case 'class':
-            pass
+            name = input('  Enter class: ')
+            editor.listClass(name)
         case 'relationships':
-            pass
+            name = input("     Class to check relationships: ")
+            editor.listRelationships(name)
 
 if __name__ == '__main__':
+    print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
     editor = Editor()
     quit = False
     while not quit:
         command = input('Enter UML Command: ')
+        command = command.strip()
         match command:
             case 'class':
                 classCommands(editor)
@@ -72,8 +85,10 @@ if __name__ == '__main__':
             case 'list':
                 listCommands(editor)
             case 'help':
-                pass
+                print('These are valid commands: class, relationship, attribute, save, load, list, exit.')
+                editor.editorHelp()
             case 'exit':
-                pass
+                quit = True
+                break
             case _:
                 print('error! print some help here')
