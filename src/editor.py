@@ -52,15 +52,12 @@ class Editor:
 
     # Function deletes given attribute from given class if both exist
     def deleteAttribute(self, class1, attribute1):
-        for item in self.classes:
-            if item.name == class1.name:
-                if attribute1 in item.attributtesSets:
-                    temp = item
-                    temp.attributtesSets.remove(attribute1)
-                    self.classes.remove(item)
-                    self.classes.add(temp)
-                    return "Attribute has been removed from this class"
-                else:
-                    return "Attribute does not exist in this class"
+        if class1 in self.classes:
+            item = self.classes[class1]
+            if attribute1 in item.attributtesSets:
+                self.classes[class1].attributtesSets.remove(attribute1)
+                print(f'Attribute `{attribute1}` has been removed from class {class1}')
             else:
-                return "Class does not exist"
+                print(f'Attribute `{attribute1}` does not exist in class {class1}')
+        else:
+            print(f'Class {class1} does not exist')
