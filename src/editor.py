@@ -57,7 +57,18 @@ class Editor:
             print(f'ERROR: class `{class2}` does not exist')
         else:
             print(f'ERROR: there is no relationship between `{class1}` and `{class2}`')
-
+    
+    # Function renames given attribute in given class if both exist and new name does not
+    def renameAttribute(self, class1, attribute1, attribute2):
+        if class1 in self.classes:
+            item = self.classes[class1]
+            if attribute1 in item.attributtesSets:
+                if attribute2 not in item.attributtesSets:
+                    self.classes[class1].attributtesSets.remove(attribute1)
+                    self.classes[class1].attributtesSets.add(attribute2)
+                    print(f'Attribute `{attribute1}` renamed to {attribute2}!')
+                else:
+                    print(f'Attribute `{attribute2}` already exists in the class {class1}')
 
     # Function deletes given attribute from given class if both exist
     def deleteAttribute(self, class1, attribute1):
