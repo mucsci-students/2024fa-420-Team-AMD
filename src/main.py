@@ -65,6 +65,14 @@ def listCommands(editor):
             name = input("     Class to check relationships: ")
             editor.listRelationships(name)
 
+class EditorEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Editor):
+            return {'classes': editor.classes, 'relationships': list(editor.relationships)}
+        if isinstance(obj, Class):
+            return {'name': obj.name, 'attributes': list(obj.attributtesSets)}
+        return json.JSONEncoder.default(self, obj)
+
 if __name__ == '__main__':
     print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
     editor = Editor()
@@ -80,7 +88,12 @@ if __name__ == '__main__':
             case 'attribute':
                 attributeCommands(editor)
             case 'save':
-                pass
+                filename = input('  Save As (.JSON): ')
+
+                output = json.dumps(editor, cls=EditorEncoder, indent=4)
+                with open(f'{filename}.JSON', 'w') as f:
+                    f.write(output)
+                print(f'Saved to {filename}.JSON!')
             case 'load':
                 filename = input('  File Name to Open: ')
 
