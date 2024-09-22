@@ -49,3 +49,30 @@ class Editor:
             print(f'ERROR: class `{class2}` does not exist')
         else:
             print(f'ERROR: there is no relationship between `{class1}` and `{class2}`')
+    
+    # Helper function for listClasses and listRelationships
+    def findRelationships(self, class_name):
+        related_classes = []
+        for relationship in self.relationships:
+            if relationship[0] == class_name:
+                if relationship[1] != class_name:
+                    related_classes.append(relationship[1])
+            elif relationship[1] == class_name:
+                if relationship[0] != class_name:
+                    related_classes.append(relationship[0])
+        return related_classes
+
+    # Function which lists all other classes a specific class has a relationship with
+    def listRelationships(self, class_name):
+        # Makes sure class we are checking for exists
+        if class_name in self.classes:
+            print(f'Class: {class_name}')
+            print('Relationships: ')
+
+            # Find relationships that include the current class
+            related_classes = self.findRelationships(class_name)
+
+            for relationship in related_classes:
+                print(f'{relationship} ---- {class_name}')
+        else:
+            print(f'{class_name} does not exist.')
