@@ -43,6 +43,17 @@ def attributeCommands(editor):
         case _:
             print('Print an error here')
 
+def listCommands(editor):
+    command = input('   Enter List Command: ')
+    match command:
+        case 'classes':
+            pass
+        case 'class':
+            pass
+        case 'relationships':
+            name = input("     Class to check relationships: ")
+            editor.listRelationships(name)
+
 if __name__ == '__main__':
     print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
     editor = Editor()
@@ -62,7 +73,7 @@ if __name__ == '__main__':
             case 'load':
                 pass
             case 'list':
-                pass
+                listCommands(editor)
             case 'help':
                 print('These are valid commands: class, relationship, attribute, save, load, list, exit.')
                 editor.editorHelp()
