@@ -1,4 +1,5 @@
 from editor import *
+from classes import *
 
 def classCommands(editor):
     command = input('  Enter Class Command: ')
@@ -8,9 +9,12 @@ def classCommands(editor):
             name = input('  Class Name to Add: ')
             editor.classAdd(name)
         case 'delete':
-            pass
+            name = input('  Class to Delete: ')
+            editor.classDelete(name)
         case 'rename':
-            pass
+            name = input('  Class to change: ')
+            rename = input('    New name: ')
+            editor.classRename(name, rename)
         case _:
             print('Print an error here')
 
@@ -18,8 +22,13 @@ def relationshipCommands(editor):
     command = input('  Enter Relationship Command: ')
     match command:
         case 'add':
-            pass
+            class1 = input('  First Class in Relationship: ')
+            class2 = input('  Second Class in Relationship: ')
+            editor.relationshipAdd(class1, class2)
         case 'delete':
+            class1 = input('  First Class in Relationship to Delete: ')
+            class2 = input('  Second Class in Relationship to Delete: ')
+            editor.relationshipDelete(class1, class2)
             pass
         case _:
             print('Print an error here')
@@ -36,11 +45,24 @@ def attributeCommands(editor):
         case _:
             print('Print an error here')
 
+def listCommands(editor):
+    command = input('   Enter List Command: ')
+    match command:
+        case 'classes':
+            pass
+        case 'class':
+            pass
+        case 'relationships':
+            name = input("     Class to check relationships: ")
+            editor.listRelationships(name)
+
 if __name__ == '__main__':
+    print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
     editor = Editor()
     quit = False
     while not quit:
         command = input('Enter UML Command: ')
+        command = command.strip()
         match command:
             case 'class':
                 classCommands(editor)
@@ -53,10 +75,12 @@ if __name__ == '__main__':
             case 'load':
                 pass
             case 'list':
-                pass
+                listCommands(editor)
             case 'help':
-                pass
+                print('These are valid commands: class, relationship, attribute, save, load, list, exit.')
+                editor.editorHelp()
             case 'exit':
-                pass
+                quit = True
+                break
             case _:
                 print('error! print some help here')
