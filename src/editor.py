@@ -67,11 +67,12 @@ class Editor:
         # Makes sure class we are checking for exists
         if class_name in self.classes:
             print(f'Class: {class_name}')
-            print('Has relationships with: ')
+            print('Relationships: ')
 
             # Find relationships that include the current class
             related_classes = self.findRelationships(class_name)
 
-            print(related_classes)
+            for relationship in related_classes:
+                print(f'{relationship} ---- {class_name}')
         else:
             print(f'{class_name} does not exist.')
