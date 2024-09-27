@@ -27,7 +27,7 @@ class Editor:
         elif rename in self.classes:
             print(f'ERROR: {rename} is an already existing class. Cannot rename.')
         else: 
-            print(f'ERROR: {rename} does not exist. Cannot rename.')
+            print(f'ERROR: {name} does not exist. Cannot rename.')
 
     # Function which adds a relationship between class1 and class2, which are both strings
     def relationshipAdd(self, class1, class2):
@@ -57,11 +57,6 @@ class Editor:
             print(f'ERROR: class `{class2}` does not exist')
         else:
             print(f'ERROR: there is no relationship between `{class1}` and `{class2}`')
-
-    # Function which lists all classes and contents of each class
-    def listClasses(self):
-        for class_name in self.classes:
-            self.listClass(class_name)
     
     # Function renames given attribute in given class if both exist and new name does not
     def renameAttribute(self, class1, attribute1, attribute2):
@@ -147,11 +142,9 @@ class Editor:
         related_classes = []
         for relationship in self.relationships:
             if relationship[0] == class_name:
-                if relationship[1] != class_name:
-                    related_classes.append(relationship[1])
+                related_classes.append((relationship[1], 'outgoing'))
             elif relationship[1] == class_name:
-                if relationship[0] != class_name:
-                    related_classes.append(relationship[0])
+                related_classes.append((relationship[0], 'incoming'))
         return related_classes
 
     # Function which lists all other classes a specific class has a relationship with
@@ -164,8 +157,11 @@ class Editor:
             # Find relationships that include the current class
             related_classes = self.findRelationships(class_name)
 
-            for relationship in related_classes:
-                print(f'{relationship} ---- {class_name}')
+            for relationship, direction in related_classes:
+                if direction == 'outgoing':
+                    print(f'{class_name} ----> {relationship}')
+                else: 
+                    print(f'{relationship} ----> {class_name}')
         else:
             print(f'{class_name} does not exist.')
 
@@ -174,25 +170,36 @@ class Editor:
         if class_name in self.classes:
             print(f'Class: {class_name}')
 
-            # First, print all relationships
-            related_classes = self.findRelationships(class_name)
-
-            if related_classes:
-                print('Relationships: ')
-                for relationship in related_classes:
-                    print(f'{relationship} ---- {class_name}')
-            else:
-                print('Relationships: None')
-
-            # Then, print all attributes
+            # First, print all attributes
             if self.classes[class_name].attributtesSets:
                 print('Attributes:')
                 for attribute in self.classes[class_name].attributtesSets:
                     print(f'  {attribute}')
             else:
-                print('Attributes: None')            
+                print('Attributes: None')   
+
+            # Then, print all relationships
+            related_classes = self.findRelationships(class_name)
+
+            if related_classes:
+                print('Relationships: ')
+                for relationship, direction in related_classes:
+                    if direction == 'outgoing':
+                        print(f'{class_name} ----> {relationship}')
+                    else: 
+                        print(f'{relationship} ----> {class_name}')
+            else:
+                print('Relationships: None')
 
             print()
 
         else:
-            print(f'Class "{class_name}" does not exist.')         
+            print(f'Class "{class_name}" does not exist.')    
+
+    # Function which lists all classes and contents of each class
+    def listClasses(self):
+        if self.classes:
+            for class_name in self.classes:
+                self.listClass(class_name)
+        else:
+            print("There are no classes yet")
