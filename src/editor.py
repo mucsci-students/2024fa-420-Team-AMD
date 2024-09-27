@@ -27,7 +27,7 @@ class Editor:
         elif rename in self.classes:
             print(f'ERROR: {rename} is an already existing class. Cannot rename.')
         else: 
-            print(f'ERROR: {rename} does not exist. Cannot rename.')
+            print(f'ERROR: {name} does not exist. Cannot rename.')
 
     # Function which adds a relationship between class1 and class2, which are both strings
     def relationshipAdd(self, class1, class2):
@@ -57,11 +57,6 @@ class Editor:
             print(f'ERROR: class `{class2}` does not exist')
         else:
             print(f'ERROR: there is no relationship between `{class1}` and `{class2}`')
-
-    # Function which lists all classes and contents of each class
-    def listClasses(self):
-        for class_name in self.classes:
-            self.listClass(class_name)
     
     # Function renames given attribute in given class if both exist and new name does not
     def renameAttribute(self, class1, attribute1, attribute2):
@@ -174,7 +169,15 @@ class Editor:
         if class_name in self.classes:
             print(f'Class: {class_name}')
 
-            # First, print all relationships
+            # First, print all attributes
+            if self.classes[class_name].attributtesSets:
+                print('Attributes:')
+                for attribute in self.classes[class_name].attributtesSets:
+                    print(f'  {attribute}')
+            else:
+                print('Attributes: None')   
+
+            # Then, print all relationships
             related_classes = self.findRelationships(class_name)
 
             if related_classes:
@@ -184,15 +187,12 @@ class Editor:
             else:
                 print('Relationships: None')
 
-            # Then, print all attributes
-            if self.classes[class_name].attributtesSets:
-                print('Attributes:')
-                for attribute in self.classes[class_name].attributtesSets:
-                    print(f'  {attribute}')
-            else:
-                print('Attributes: None')            
-
             print()
 
         else:
-            print(f'Class "{class_name}" does not exist.')         
+            print(f'Class "{class_name}" does not exist.')    
+
+    # Function which lists all classes and contents of each class
+    def listClasses(self):
+        for class_name in self.classes:
+            self.listClass(class_name)
