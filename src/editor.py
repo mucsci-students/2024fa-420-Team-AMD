@@ -142,11 +142,9 @@ class Editor:
         related_classes = []
         for relationship in self.relationships:
             if relationship[0] == class_name:
-                if relationship[1] != class_name:
-                    related_classes.append(relationship[1])
+                related_classes.append((relationship[1], 'outgoing'))
             elif relationship[1] == class_name:
-                if relationship[0] != class_name:
-                    related_classes.append(relationship[0])
+                related_classes.append((relationship[0], 'incoming'))
         return related_classes
 
     # Function which lists all other classes a specific class has a relationship with
@@ -159,8 +157,11 @@ class Editor:
             # Find relationships that include the current class
             related_classes = self.findRelationships(class_name)
 
-            for relationship in related_classes:
-                print(f'{relationship} ---- {class_name}')
+            for relationship, direction in related_classes:
+                if direction == 'outgoing':
+                    print(f'{class_name} ----> {relationship}')
+                else: 
+                    print(f'{relationship} ----> {class_name}')
         else:
             print(f'{class_name} does not exist.')
 
@@ -182,8 +183,11 @@ class Editor:
 
             if related_classes:
                 print('Relationships: ')
-                for relationship in related_classes:
-                    print(f'{relationship} ---- {class_name}')
+                for relationship, direction in related_classes:
+                    if direction == 'outgoing':
+                        print(f'{class_name} ----> {relationship}')
+                    else: 
+                        print(f'{relationship} ----> {class_name}')
             else:
                 print('Relationships: None')
 
@@ -194,5 +198,8 @@ class Editor:
 
     # Function which lists all classes and contents of each class
     def listClasses(self):
-        for class_name in self.classes:
-            self.listClass(class_name)
+        if self.classes:
+            for class_name in self.classes:
+                self.listClass(class_name)
+        else:
+            print("There are no classes yet")
