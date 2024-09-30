@@ -16,6 +16,8 @@ class Editor:
     def classDelete(self, name):
         if name in self.classes:
             del self.classes[name]
+            # Deleting relationships that are no longer valid after class deletion
+            self.relationships = filter(lambda x: x[0] != name and x[1] != name, self.relationships)
             print(f'Deleted class {name}!')
         else:
             print(f'ERROR: No class exists with the name `{name}`')
