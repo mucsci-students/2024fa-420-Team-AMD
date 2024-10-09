@@ -13,3 +13,4 @@ class UI:
     
     def uiQuery(self, prompt: str) -> str:
         pass
+
