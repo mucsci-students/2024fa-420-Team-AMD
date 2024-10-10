@@ -43,7 +43,12 @@ class EditorController:
         if name in self.editor.classes:
             del self.editor.classes[name]
             # Deleting relationships that are no longer valid after class deletion
-            self.editor.relationships = filter(lambda x: x[0] != name and x[1] != name, self.editor.relationships)
+            toRemove = []
+            for (src, dst) in self.editor.relationships:
+                if name == src or name == dst:
+                    toRemove.append((src, dst))
+            for (src, dst) in toRemove:
+                self.editor.relationships.discard((src, dst))
             self.ui.uiFeedback(f'Deleted class {name}!')
         else:
             self.ui.uiError(f'No class exists with the name `{name}`')
