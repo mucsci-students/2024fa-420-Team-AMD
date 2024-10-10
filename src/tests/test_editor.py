@@ -23,6 +23,24 @@ class testEditor(unittest.TestCase):
         ctrl.editor.classes['Foo'] = Class('Foo')
         ctrl.classDelete('Bar')
         assert 'Foo' in ctrl.editor.classes, 'Foo did not remain after failed deletion'
+
+    # This is to monitor a bug where a lambda expression cleared the relationships list
+    def testClassDeleteBugfix(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.classAdd('Bar')
+        ctrl.relationshipAdd('Foo', 'Bar')
+        ctrl.classAdd('Quo')
+
+        before = ctrl.editor.relationships
+        ctrl.classDelete('Quo')
+        after = ctrl.editor.relationships
+        print('Bugfix: ', before, after)
+
+        assert before == after, 'Relationships were modified when an unrelated class was deleted'
         
     def testClassRenameSuccess(self):
         editor = Editor()
