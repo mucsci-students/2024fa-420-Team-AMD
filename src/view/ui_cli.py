@@ -1,4 +1,5 @@
 from . import ui_interface
+from model.relationship_model import Type
 
 class CLI(ui_interface.UI):
     def uiFeedback(self, text: str):
@@ -62,12 +63,18 @@ class CLI(ui_interface.UI):
             case 'add':
                 class1 = input('  First Class in Relationship: ')
                 class2 = input('  Second Class in Relationship: ')
-                controller.relationshipAdd(class1, class2)
+                print('  Type of Relationship:')
+                print('    Aggregate')
+                text = input('  Enter: ').lower()
+                typ = Type.make(text)
+                if typ == None:
+                    self.uiError(f'Cannot determine relationship type from `{text}`')
+                    return
+                controller.relationshipAdd(class1, class2, typ)
             case 'delete':
                 class1 = input('  First Class in Relationship to Delete: ')
                 class2 = input('  Second Class in Relationship to Delete: ')
                 controller.relationshipDelete(class1, class2)
-                pass
             case _:
                 print('Print an error here')
     
@@ -155,11 +162,11 @@ class CLI(ui_interface.UI):
             # Find relationships that include the current class
             related_classes = controller.findRelationships(class_name)
 
-            for relationship, direction in related_classes:
+            for relationship, direction, typ in related_classes:
                 if direction == 'outgoing':
-                    print(f'{class_name} ----> {relationship}')
+                    print(f'{class_name} ----> {relationship} ({typ.name})')
                 else: 
-                    print(f'{relationship} ----> {class_name}')
+                    print(f'{relationship} ----> {class_name} ({typ.name})')
         else:
             print(f'{class_name} does not exist.')
 
@@ -181,11 +188,11 @@ class CLI(ui_interface.UI):
 
             if related_classes:
                 print('Relationships: ')
-                for relationship, direction in related_classes:
+                for relationship, direction, typ in related_classes:
                     if direction == 'outgoing':
-                        print(f'{class_name} ----> {relationship}')
+                        print(f'{class_name} ----> {relationship} ({typ.name})')
                     else: 
-                        print(f'{relationship} ----> {class_name}')
+                        print(f'{relationship} ----> {class_name} ({typ.name})')
             else:
                 print('Relationships: None')
 

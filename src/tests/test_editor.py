@@ -1,6 +1,7 @@
 import unittest
 from model.editor_model import Editor
 from model.class_model import Class
+from model.relationship_model import Type, Relationship
 from controller.editor_controller import EditorController
 from view.ui_cli import CLI
 
@@ -61,9 +62,8 @@ class testEditor(unittest.TestCase):
 
         ctrl.editor.classes['Foo'] = Class('Foo')
         ctrl.editor.classes['Bar'] = Class('Bar')
-        ctrl.relationshipAdd('Foo', 'Bar')
-        # relationshipAdd will always, on success, insert a tuple with the order of the arguments given
-        assert ('Foo', 'Bar') in ctrl.editor.relationships, 'Relationship was not added successfully'
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
+        assert Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships, 'Relationship was not added successfully'
 
     # Failure due to already existing relationship
     def testRelationshipAddFailure1(self):
@@ -73,10 +73,10 @@ class testEditor(unittest.TestCase):
 
         ctrl.editor.classes['Foo'] = Class('Foo')
         ctrl.editor.classes['Bar'] = Class('Bar')
-        ctrl.relationshipAdd('Foo', 'Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
 
-        ctrl.relationshipAdd('Bar', 'Foo')
-        assert ('Bar', 'Foo') not in ctrl.editor.relationships, 'Duplication was not checked for'
+        ctrl.relationshipAdd('Bar', 'Foo', Type.Aggregate)
+        assert Relationship('Bar', 'Foo', Type.Aggregate) not in ctrl.editor.relationships, 'Duplication was not checked for'
 
     # Failure due to missing class
     def testRelationshipAddFailure2(self):
@@ -85,8 +85,8 @@ class testEditor(unittest.TestCase):
         ctrl = EditorController(ui, editor)
 
         ctrl.editor.classes['Foo'] = Class('Foo')
-        ctrl.relationshipAdd('Foo', 'Bar')
-        assert ('Foo', 'Bar') not in ctrl.editor.relationships, 'Class was not checked for existence'
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
+        assert Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships, 'Class was not checked for existence'
 
     def testRelationshipDeleteSuccess(self):
         editor = Editor()
@@ -95,10 +95,10 @@ class testEditor(unittest.TestCase):
 
         ctrl.editor.classes['Foo'] = Class('Foo')
         ctrl.editor.classes['Bar'] = Class('Bar')
-        ctrl.editor.relationships.add(('Foo', 'Bar'))
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
 
         ctrl.relationshipDelete('Foo', 'Bar')
-        assert ('Foo', 'Bar') not in ctrl.editor.relationships, 'Relationship was not deleted'
+        assert Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship was not deleted'
 
     # Failure due to no relationship
     def testRelationshipDeleteFailure1(self):
@@ -110,7 +110,7 @@ class testEditor(unittest.TestCase):
         ctrl.editor.classes['Bar'] = Class('Bar')
 
         ctrl.relationshipDelete('Foo', 'Bar')
-        assert ('Foo', 'Bar') not in ctrl.editor.relationships, 'Relationship should not have been removed'
+        assert Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship should not have been removed'
 
     # Failure due to missing classes
     def testRelationshipDeleteFailure2(self):
@@ -120,10 +120,10 @@ class testEditor(unittest.TestCase):
 
         ctrl.editor.classes['Foo'] = Class('Foo')
         ctrl.editor.classes['Bar'] = Class('Bar')
-        ctrl.editor.relationships.add(('Foo', 'Bar'))
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
 
         ctrl.relationshipDelete('Foo', 'Baz')
-        assert ('Foo', 'Bar') in ctrl.editor.relationships and ('Foo', 'Baz') not in ctrl.editor.relationships, 'Relationship should not have been removed'
+        assert Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships and Relationship('Foo', 'Baz', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship should not have been removed'
 
     def testAddAttributeSuccess(self):
         editor = Editor()
