@@ -38,6 +38,7 @@ class EditorController:
             newclass = Class(name)
             self.editor.classes[name] = newclass
             self.ui.uiFeedback(f'Added class {name}!')
+            self.ui.addClassBox(name)
         
     def classDelete(self, name):
         if name in self.editor.classes:
@@ -45,6 +46,7 @@ class EditorController:
             # Deleting relationships that are no longer valid after class deletion
             self.editor.relationships = filter(lambda x: x[0] != name and x[1] != name, self.editor.relationships)
             self.ui.uiFeedback(f'Deleted class {name}!')
+            self.ui.deleteClassBox(name)
         else:
             self.ui.uiError(f'No class exists with the name `{name}`')
 
@@ -53,6 +55,7 @@ class EditorController:
         if name in self.editor.classes and rename not in self.editor.classes:
             self.editor.classes[rename] = self.editor.classes.pop(name)
             self.ui.uiFeedback(f'Renamed class `{name}` to `{rename}`')
+            self.ui.renameClassBox(name, rename)
         elif rename in self.editor.classes:
             self.ui.uiError(f'{rename} is an already existing class. Cannot rename.')
         else: 
@@ -96,6 +99,7 @@ class EditorController:
                     self.editor.classes[class1].attributtesSets.remove(attribute1)
                     self.editor.classes[class1].attributtesSets.add(attribute2)
                     self.ui.uiFeedback(f'Attribute `{attribute1}` renamed to {attribute2}!')
+                    self.ui.updateAttributesBox(class1)
                 else:
                     self.ui.uiError(f'Attribute `{attribute2}` already exists in the class {class1}')
 
@@ -106,6 +110,7 @@ class EditorController:
             if attribute1 in item.attributtesSets:
                 self.editor.classes[class1].attributtesSets.remove(attribute1)
                 self.ui.uiFeedback(f'Attribute `{attribute1}` has been removed from class {class1}')
+                self.ui.updateAttributesBox(class1)
             else:
                 self.ui.uiError(f'Attribute `{attribute1}` does not exist in class {class1}')
         else:
@@ -120,6 +125,7 @@ class EditorController:
             else:
                 self.editor.classes[class1].attributtesSets.add(attribute1)
                 self.ui.uiFeedback(f'Attribute `{attribute1}` has been added to class {class1}')
+                self.ui.updateAttributesBox(class1)
         else:
             self.ui.uiError(f'Class {class1} does not exist')
 
@@ -146,3 +152,55 @@ class EditorController:
     # Function which lists all classes and contents of each class
     def listClasses(self):
         self.ui.listClasses(self)
+
+    # Used in GUI to prompt the user for any class buttons
+    def classCommandPrompt(self, action):
+        match action:
+            case 'add':
+                class_name = self.ui.uiQuery("Class Name to Add:")
+                if class_name:
+                    self.classAdd(class_name)
+
+            case 'delete':
+                class_name = self.ui.uiQuery("Class to Delete:")
+                if class_name:
+                    self.classDelete(class_name)
+
+            case 'rename':
+                old_name = self.ui.uiQuery("Class to change:")
+                if old_name:
+                    new_name = self.ui.uiQuery("New name:")
+                    if new_name:
+                        self.classRename(old_name, new_name)
+
+            case _:
+                self.ui.uiError("Invalid action.")
+
+    # Used in GUI to prompt the user for any attribute commands
+    def attributeCommandPrompt(self, action):
+        match action:
+            case 'add':
+                class_name = self.ui.uiQuery("Enter the class to add an attribute to:")
+                if class_name:
+                    attribute_name = self.ui.uiQuery("Enter the name of the attribute to add:")
+                    if attribute_name:
+                        self.addAttribute(class_name, attribute_name)
+
+            case 'delete':
+                class_name = self.ui.uiQuery("Enter the class to delete an attribute from:")
+                if class_name:
+                    attribute_name = self.ui.uiQuery("Enter the name of the attribute to delete:")
+                    if attribute_name:
+                        self.deleteAttribute(class_name, attribute_name)
+
+            case 'rename':
+                class_name = self.ui.uiQuery("Enter the class whose attribute you would like to rename:")
+                if class_name:
+                    old_attribute_name = self.ui.uiQuery("Enter the current name of the attribute:")
+                    if old_attribute_name:
+                        new_attribute_name = self.ui.uiQuery("Enter the new name of the attribute:")
+                        if new_attribute_name:
+                            self.renameAttribute(class_name, old_attribute_name, new_attribute_name)
+
+            case _:
+                self.ui.uiError("Invalid action.")
