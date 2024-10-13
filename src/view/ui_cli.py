@@ -64,7 +64,10 @@ class CLI(ui_interface.UI):
                 class1 = input('  First Class in Relationship: ')
                 class2 = input('  Second Class in Relationship: ')
                 print('  Type of Relationship:')
-                print('    Aggregate')
+                print(f'    {Type.Aggregate.display()}')
+                print(f'    {Type.Composition.display()}')
+                print(f'    {Type.Inheritance.display()}')
+                print(f'    {Type.Realization.display()}')
                 text = input('  Enter: ').lower()
                 typ = Type.make(text)
                 if typ == None:
@@ -125,7 +128,7 @@ class CLI(ui_interface.UI):
                     print()
                 case 'relationship help':
                     print('Valid subcommands:')
-                    print('     add: Creates a relationship between two classes')
+                    print('     add: Creates a typed relationship between two classes')
                     print('     delete: Deletes an existing relationship between two classes')
                     print()
                 case 'attribute help':

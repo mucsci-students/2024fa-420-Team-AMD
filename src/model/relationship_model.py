@@ -2,17 +2,32 @@ from enum import Enum
 
 class Type(Enum):
     Aggregate = 1
+    Composition = 2
+    Inheritance = 3
+    Realization = 4
     
     def display(self):
         match self:
-            case Aggregate:
+            case Type.Aggregate:
                 return 'Aggregate'
+            case Type.Composition:
+                return 'Composition'
+            case Type.Inheritance:
+                return 'Inheritance'
+            case Type.Realization:
+                return 'Realization'
     
     # Translates input into Relationship Type. Returns None on bad input
     def make(text):
         match text:
             case 'aggregate':
                 return Type.Aggregate
+            case 'composition':
+                return Type.Composition
+            case 'inheritance':
+                return Type.Inheritance
+            case 'realization':
+                return Type.Realization
             case _:
                 return None
     
