@@ -32,53 +32,53 @@ class GUI(ui_interface.UI):
     def classCommandPrompt(self, action):
         match action:
             case 'add':
-                class_name = self.ui.uiQuery("Class Name to Add:")
+                class_name = self.uiQuery("Class Name to Add:")
                 if class_name:
-                    self.classAdd(class_name)
+                    self.controller.classAdd(class_name)
 
             case 'delete':
-                class_name = self.ui.uiQuery("Class to Delete:")
+                class_name = self.uiQuery("Class to Delete:")
                 if class_name:
-                    self.classDelete(class_name)
+                    self.controller.classDelete(class_name)
 
             case 'rename':
-                old_name = self.ui.uiQuery("Class to change:")
+                old_name = self.uiQuery("Class to change:")
                 if old_name:
-                    new_name = self.ui.uiQuery("New name:")
+                    new_name = self.uiQuery("New name:")
                     if new_name:
-                        self.classRename(old_name, new_name)
+                        self.controller.classRename(old_name, new_name)
 
             case _:
-                self.ui.uiError("Invalid action.")
+                self.uiError("Invalid action.")
 
     # prompt the user for any attribute commands
     def attributeCommandPrompt(self, action):
         match action:
             case 'add':
-                class_name = self.ui.uiQuery("Enter the class to add an attribute to:")
+                class_name = self.uiQuery("Enter the class to add an attribute to:")
                 if class_name:
-                    attribute_name = self.ui.uiQuery("Enter the name of the attribute to add:")
+                    attribute_name = self.uiQuery("Enter the name of the attribute to add:")
                     if attribute_name:
-                        self.addAttribute(class_name, attribute_name)
+                        self.controller.addAttribute(class_name, attribute_name)
 
             case 'delete':
-                class_name = self.ui.uiQuery("Enter the class to delete an attribute from:")
+                class_name = self.uiQuery("Enter the class to delete an attribute from:")
                 if class_name:
-                    attribute_name = self.ui.uiQuery("Enter the name of the attribute to delete:")
+                    attribute_name = self.uiQuery("Enter the name of the attribute to delete:")
                     if attribute_name:
-                        self.deleteAttribute(class_name, attribute_name)
+                        self.controller.deleteAttribute(class_name, attribute_name)
 
             case 'rename':
-                class_name = self.ui.uiQuery("Enter the class whose attribute you would like to rename:")
+                class_name = self.uiQuery("Enter the class whose attribute you would like to rename:")
                 if class_name:
-                    old_attribute_name = self.ui.uiQuery("Enter the current name of the attribute:")
+                    old_attribute_name = self.uiQuery("Enter the current name of the attribute:")
                     if old_attribute_name:
-                        new_attribute_name = self.ui.uiQuery("Enter the new name of the attribute:")
+                        new_attribute_name = self.uiQuery("Enter the new name of the attribute:")
                         if new_attribute_name:
-                            self.renameAttribute(class_name, old_attribute_name, new_attribute_name)
+                            self.controller.renameAttribute(class_name, old_attribute_name, new_attribute_name)
 
             case _:
-                self.ui.uiError("Invalid action.")
+                self.uiError("Invalid action.")
 
     def create_toolbar(self):
         # Create a dropdown for 'Classes'
