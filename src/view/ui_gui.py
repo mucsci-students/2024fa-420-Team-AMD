@@ -28,23 +28,75 @@ class GUI(ui_interface.UI):
         self.offset_x = 0
         self.offset_y = 0
 
+    # prompt the user for any class buttons
+    def classCommandPrompt(self, action):
+        match action:
+            case 'add':
+                class_name = self.ui.uiQuery("Class Name to Add:")
+                if class_name:
+                    self.classAdd(class_name)
+
+            case 'delete':
+                class_name = self.ui.uiQuery("Class to Delete:")
+                if class_name:
+                    self.classDelete(class_name)
+
+            case 'rename':
+                old_name = self.ui.uiQuery("Class to change:")
+                if old_name:
+                    new_name = self.ui.uiQuery("New name:")
+                    if new_name:
+                        self.classRename(old_name, new_name)
+
+            case _:
+                self.ui.uiError("Invalid action.")
+
+    # prompt the user for any attribute commands
+    def attributeCommandPrompt(self, action):
+        match action:
+            case 'add':
+                class_name = self.ui.uiQuery("Enter the class to add an attribute to:")
+                if class_name:
+                    attribute_name = self.ui.uiQuery("Enter the name of the attribute to add:")
+                    if attribute_name:
+                        self.addAttribute(class_name, attribute_name)
+
+            case 'delete':
+                class_name = self.ui.uiQuery("Enter the class to delete an attribute from:")
+                if class_name:
+                    attribute_name = self.ui.uiQuery("Enter the name of the attribute to delete:")
+                    if attribute_name:
+                        self.deleteAttribute(class_name, attribute_name)
+
+            case 'rename':
+                class_name = self.ui.uiQuery("Enter the class whose attribute you would like to rename:")
+                if class_name:
+                    old_attribute_name = self.ui.uiQuery("Enter the current name of the attribute:")
+                    if old_attribute_name:
+                        new_attribute_name = self.ui.uiQuery("Enter the new name of the attribute:")
+                        if new_attribute_name:
+                            self.renameAttribute(class_name, old_attribute_name, new_attribute_name)
+
+            case _:
+                self.ui.uiError("Invalid action.")
+
     def create_toolbar(self):
         # Create a dropdown for 'Classes'
         class_menu = tk.Menubutton(self.toolbar, text="Classes", relief=tk.RAISED)                          #command=self.classesCommands
         class_menu.menu = tk.Menu(class_menu, tearoff=0)
         class_menu["menu"] = class_menu.menu
-        class_menu.menu.add_command(label="Add Class", command=lambda: self.controller.classCommandPrompt('add'))    #LAMBDA IS NECESSARY: button should call a user prompt. Prompt is piped into classAdd to add class
-        class_menu.menu.add_command(label="Delete Class", command=lambda: self.controller.classCommandPrompt('delete'))
-        class_menu.menu.add_command(label="Rename Class", command=lambda: self.controller.classCommandPrompt('rename'))
+        class_menu.menu.add_command(label="Add Class", command=lambda: self.classCommandPrompt('add'))    #LAMBDA IS NECESSARY: button should call a user prompt. Prompt is piped into classAdd to add class
+        class_menu.menu.add_command(label="Delete Class", command=lambda: self.classCommandPrompt('delete'))
+        class_menu.menu.add_command(label="Rename Class", command=lambda: self.classCommandPrompt('rename'))
         class_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Attributes'
         attribute_menu = tk.Menubutton(self.toolbar, text="Attributes", relief=tk.RAISED)
         attribute_menu.menu = tk.Menu(attribute_menu, tearoff=0)
         attribute_menu["menu"] = attribute_menu.menu
-        attribute_menu.menu.add_command(label="Add Attribute", command=lambda: self.controller.attributeCommandPrompt('add'))          #command=self.attributesCommands
-        attribute_menu.menu.add_command(label="Delete Attribute", command=lambda: self.controller.attributeCommandPrompt('delete'))
-        attribute_menu.menu.add_command(label="Rename Attribute", command=lambda: self.controller.attributeCommandPrompt('rename'))
+        attribute_menu.menu.add_command(label="Add Attribute", command=lambda: self.attributeCommandPrompt('add'))          #command=self.attributesCommands
+        attribute_menu.menu.add_command(label="Delete Attribute", command=lambda: self.attributeCommandPrompt('delete'))
+        attribute_menu.menu.add_command(label="Rename Attribute", command=lambda: self.attributeCommandPrompt('rename'))
         attribute_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Relationships'
@@ -72,7 +124,7 @@ class GUI(ui_interface.UI):
 
         button_save = tk.Button(self.toolbar, text="Quit", command=self.root.destroy) 
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
-    
+
     # Creates a new box for a class. Leaves space for attributes
     def addClassBox(self, class_name, attributes=None):
         if attributes is None:
