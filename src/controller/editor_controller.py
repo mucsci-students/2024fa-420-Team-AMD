@@ -1,6 +1,7 @@
 import json
 from model.class_model import Class
 from model.editor_model import EditorEncoder
+from model.relationship_model import Relationship, Type
 
 class EditorController:
     def __init__(self, ui, editor):
@@ -25,11 +26,10 @@ class EditorController:
                 self.classAdd(name)
                 for attr in obj['classes'][name]['attributes']:
                     self.addAttribute(name, attr)
-                    for rel in obj['relationships']:
-                        # Relationships should save tuples of a pair of class names
-                        self.relationshipAdd(rel[0], rel[1])
+            for rel in obj['relationships']:
+                self.relationshipAdd(rel['src'], rel['dst'], Type.make(rel['type'].lower()))
                         
-                        self.ui.uiFeedback(f'=--> Loaded from {filename}!')
+        self.ui.uiFeedback(f'=--> Loaded from {filename}!')
 
     def classAdd(self, name):
         if name in self.editor.classes:
@@ -64,9 +64,9 @@ class EditorController:
             self.ui.uiError(f'{name} does not exist. Cannot rename.')
 
     # Function which adds a relationship between class1 and class2, which are both strings
-    def relationshipAdd(self, class1, class2):
+    def relationshipAdd(self, class1, class2, typ):
         # We use tuples to make it simple to check for relationship existence in both orders
-        if (class1, class2) in self.editor.relationships or (class2, class1) in self.editor.relationships:
+        if self.editor.hasRelationship(class1, class2) or self.editor.hasRelationship(class2, class1):
             self.ui.uiError(f'There is already a relationship between `{class1}` and `{class2}`')
         elif class1 not in self.editor.classes:
             self.ui.uiError(f'class `{class1}` does not exist')
@@ -74,17 +74,18 @@ class EditorController:
             self.ui.uiError(f'class `{class2}` does not exist')
         else:
             # Note the extra parenthesis as we are adding a tuple to the set
-            self.editor.relationships.add((class1, class2))
-            self.ui.uiFeedback(f'Added relationship between {class1} and {class2}!')
+            self.editor.relationships.add(Relationship(class1, class2, typ))
+            self.ui.uiFeedback(f'Added relationship between {class1} and {class2} of type {typ.name}!')
 
     # Function which deletes a relationship between class1 and class2
     def relationshipDelete(self, class1, class2):
-        if (class1, class2) in self.editor.relationships:
-            self.editor.relationships.remove((class1, class2))
+        if self.editor.hasRelationship(class1, class2):
+            toRemove = None
+            for rel in self.editor.relationships:
+                if rel.src == class1 and rel.dst == class2:
+                    toRemove = rel
+            self.editor.relationships.remove(toRemove)
             self.ui.uiFeedback(f'Removed relationship between {class1} and {class2}!')
-        elif (class2, class1) in self.editor.relationships:
-            self.editor.relationships.remove((class2, class1))
-            self.ui.uiFeedback(f'Removed relationship between {class2} and {class1}!')
         elif class1 not in self.editor.classes:
             self.ui.uiError(f'class `{class1}` does not exist')
         elif class2 not in self.editor.classes:
@@ -135,10 +136,10 @@ class EditorController:
     def findRelationships(self, class_name):
         related_classes = []
         for relationship in self.editor.relationships:
-            if relationship[0] == class_name:
-                related_classes.append((relationship[1], 'outgoing'))
-            elif relationship[1] == class_name:
-                related_classes.append((relationship[0], 'incoming'))
+            if relationship.src == class_name:
+                related_classes.append((relationship.dst, 'outgoing', relationship.typ))
+            elif relationship.dst == class_name:
+                related_classes.append((relationship.src, 'incoming', relationship.typ))
         return related_classes
 
     def listRelationships(self, class_name):
