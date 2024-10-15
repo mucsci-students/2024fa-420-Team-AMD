@@ -1,6 +1,6 @@
 import unittest
 from model.editor_model import Editor
-from model.class_model import Class
+from model.class_model import Class, Field, Method
 from model.relationship_model import Type, Relationship
 from controller.editor_controller import EditorController
 from view.ui_cli import CLI
@@ -200,77 +200,227 @@ class testEditor(unittest.TestCase):
         b1 = Relationship('Foo', 'Bar', Type.Inheritance) not in ctrl.editor.relationships
         assert b1, 'Relationship should not have manifested from nothing'
 
-    def testAddAttributeSuccess(self):
+    def testAddFieldSuccess(self):
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
 
         ctrl.classAdd('Foo')
 
-        ctrl.addAttribute('Foo', 'at')
-        assert 'at' in ctrl.editor.classes['Foo'].attributtesSets, 'Attribute added to class'
+        ctrl.addField('Foo', 'at')
+        assert Field('at') in ctrl.editor.classes['Foo'].fields, 'Attribute added to class'
 
     # Failure due to class not existing
-    def testAddAttributeFailure1(self):
+    def testAddFieldFailure1(self):
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
 
-        ctrl.addAttribute('Foo', 'at')
+        ctrl.addField('Foo', 'at')
         assert 'Foo' not in ctrl.editor.classes, 'class was not checked for existence'
     
     # Failure due to attribute already existing in class
-    def testAddAttributeFailure2(self):
+    def testAddFieldFailure2(self):
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
 
         ctrl.classAdd('Foo')
-        ctrl.addAttribute('Foo', 'at')
+        ctrl.addField('Foo', 'at')
 
-        ctrl.addAttribute('Foo', 'at')
-        assert 'at' in ctrl.editor.classes['Foo'].attributtesSets, 'duplication was not checked for'
+        ctrl.addField('Foo', 'at')
+        assert Field('at') in ctrl.editor.classes['Foo'].fields, 'duplication was not checked for'
 
-    def testRenameAttributeSuccess(self):
+    def testRenameFieldSuccess(self):
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
 
         ctrl.classAdd('Foo')
-        ctrl.addAttribute('Foo', 'at')
+        ctrl.addField('Foo', 'at')
 
-        ctrl.renameAttribute('Foo', 'at', 'at2')
-        assert 'at2' in ctrl.editor.classes['Foo'].attributtesSets and 'at' not in ctrl.editor.classes['Foo'].attributtesSets, 'Attribute name was not changed'
+        ctrl.renameField('Foo', 'at', 'at2')
+        assert Field('at2') in ctrl.editor.classes['Foo'].fields and Field('at') not in ctrl.editor.classes['Foo'].fields, 'Attribute name was not changed'
 
     # Failure due to class not existing
-    def testRenameAttributeFailure1(self):
+    def testRenameFieldFailure1(self):
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
 
-        ctrl.renameAttribute('Foo', 'at', 'at2')
+        ctrl.renameField('Foo', 'at', 'at2')
         assert 'Foo' not in ctrl.editor.classes, 'class not checked for existence'
     
     # Faiure due to original attribute not existing
-    def testRenameAttributeFailure2(self):
+    def testRenameFieldFailure2(self):
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
 
         ctrl.classAdd('Foo')
 
-        ctrl.renameAttribute('Foo', 'at', 'at2')
-        assert 'at2' not in ctrl.editor.classes['Foo'].attributtesSets and 'at' not in ctrl.editor.classes['Foo'].attributtesSets, 'Attribute not checked for existence'
+        ctrl.renameField('Foo', 'at', 'at2')
+        assert Field('at2') not in ctrl.editor.classes['Foo'].fields and Field('at') not in ctrl.editor.classes['Foo'].fields, 'Attribute not checked for existence'
     
     # Failure due to new attrubute name already existing
-    def testRenameAttributeFailure3(self):
+    def testRenameFieldFailure3(self):
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
 
         ctrl.classAdd('Foo')
-        ctrl.addAttribute('Foo', 'at')
-        ctrl.addAttribute('Foo', 'at2')
+        ctrl.addField('Foo', 'at')
+        ctrl.addField('Foo', 'at2')
 
-        ctrl.renameAttribute('Foo', 'at', 'at2')
-        assert 'at2' in ctrl.editor.classes['Foo'].attributtesSets and 'at' in ctrl.editor.classes['Foo'].attributtesSets, 'Duplication was not checked for'
+        ctrl.renameField('Foo', 'at', 'at2')
+        assert Field('at2') in ctrl.editor.classes['Foo'].fields and Field('at') in ctrl.editor.classes['Foo'].fields, 'Duplication was not checked for'
+
+    def testAddMethodSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+
+        ctrl.addMethod('Foo', 'run', ['a, b, c'])
+        assert Method('run') in ctrl.editor.classes['Foo'].methods, 'Method was not added to the class'
+
+    # Failure due to no class
+    def testAddMethodFailure1(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.addMethod('Foo', 'run', ['a, b, c'])
+        assert 'Foo' not in ctrl.editor.classes, 'Method was added to a non existant class'
+
+    # Failure due to duplication
+    def testAddMethodFailure2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+
+        ctrl.addMethod('Foo', 'run', ['a, b, c'])
+        ctrl.addMethod('Foo', 'run', ['a, b, c'])
+        assert Method('run') in ctrl.editor.classes['Foo'].methods, 'Method should still exist'
+
+    def testDeleteMethodSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+
+        ctrl.addMethod('Foo', 'run', ['a, b, c'])
+        ctrl.deleteMethod('Foo', 'run')
+        assert Method('run') not in ctrl.editor.classes['Foo'].methods, 'Method still exists'
+
+    # Failure due to no method existing
+    def testDeleteMethodFailure(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+
+        ctrl.deleteMethod('Foo', 'run')
+        assert Method('run') not in ctrl.editor.classes['Foo'].methods, 'Method should not exist'
+
+    def testRenameMethodSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a, b, c'])
+
+        ctrl.renameMethod('Foo', 'run', 'walk')
+        b1 = Method('run') not in ctrl.editor.classes['Foo'].methods
+        b2 = Method('walk') in ctrl.editor.classes['Foo'].methods
+        assert b1 and b2, 'Method should have been renamed'
+
+    # Failure due to no existing method
+    def testRenameMethodFailure1(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+
+        ctrl.renameMethod('Foo', 'run', 'walk')
+        b1 = Method('run') not in ctrl.editor.classes['Foo'].methods
+        b2 = Method('walk') not in ctrl.editor.classes['Foo'].methods
+        assert b1 and b2, 'No method should exist'
+
+    # Failure due to duplication
+    def testRenameMethodFailure2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a, b, c'])
+        ctrl.addMethod('Foo', 'walk', [])
+
+        ctrl.renameMethod('Foo', 'run', 'walk')
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        b2 = Method('walk') in ctrl.editor.classes['Foo'].methods
+        assert b1 and b2, 'Nothing should have changed'
+
+    def testRenameParameterSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a', 'b', 'c'])
+
+        ctrl.renameParameter('Foo', 'run', 'a', 'd')
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
+        b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['d', 'b', 'c']
+        assert b1 and b2, 'Parameter was not renamed correctly'
+
+    def testRenameParameterFailure(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a', 'b', 'c'])
+
+        ctrl.renameParameter('Foo', 'run', 'd', 'e')
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
+        b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['a', 'b', 'c']
+        assert b1 and b2, 'Parameter was modified when they should not have'
+
+    def testClearParametersSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a', 'b', 'c'])
+
+        ctrl.clearParameters('Foo', 'run')
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
+        b2 = ctrl.editor.classes['Foo'].methods[idx].params == []
+        assert b1 and b2, 'Parameters were not cleared'
+
+    def testClearParametersFailure(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a', 'b', 'c'])
+
+        ctrl.clearParameters('Foo', 'walk')
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
+        b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['a', 'b', 'c']
+        assert b1 and b2, 'Parameters were clared when they should not have'

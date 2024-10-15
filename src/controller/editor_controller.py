@@ -1,5 +1,5 @@
 import json
-from model.class_model import Class
+from model.class_model import Class, Field, Method
 from model.editor_model import EditorEncoder
 from model.relationship_model import Relationship, Type
 
@@ -25,7 +25,12 @@ class EditorController:
             for clazz in obj['classes']:
                 self.classAdd(clazz['name'])
                 for attr in clazz['fields']:
-                    self.addAttribute(clazz['name'], attr)
+                    self.addField(clazz['name'], attr['name'])
+                for method in clazz['methods']:
+                    params = []
+                    for p in method['params']:
+                        params.append(p['name'])
+                    self.addMethod(clazz['name'], method['name'], params)
             for rel in obj['relationships']:
                 self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
                         
@@ -126,41 +131,141 @@ class EditorController:
             self.ui.uiError(f'There is no relationship from {class1} to {class2}!')
     
     # Function renames given attribute in given class if both exist and new name does not
-    def renameAttribute(self, class1, attribute1, attribute2):
+    def renameField(self, class1, field1, field2):
         if class1 in self.editor.classes:
             item = self.editor.classes[class1]
-            if attribute1 in item.attributtesSets:
-                if attribute2 not in item.attributtesSets:
-                    self.editor.classes[class1].attributtesSets.remove(attribute1)
-                    self.editor.classes[class1].attributtesSets.add(attribute2)
-                    self.ui.uiFeedback(f'Attribute `{attribute1}` renamed to {attribute2}!')
-                    self.ui.updateAttributesBox(class1)
+            
+            if Field(field1) in item.fields:
+                if Field(field2) not in item.fields:
+                    self.editor.classes[class1].fields.remove(Field(field1))
+                    self.editor.classes[class1].fields.append(Field(field2))
+                    self.ui.uiFeedback(f'Field `{field1}` renamed to {field2}!')
                 else:
-                    self.ui.uiError(f'Attribute `{attribute2}` already exists in the class {class1}')
+                    self.ui.uiError(f'Field `{field2}` already exists in the class {class1}')
+            else:
+                self.ui.uiError(f'There is no field named `{field1}` in the class {class1}')
 
     # Function deletes given attribute from given class if both exist
-    def deleteAttribute(self, class1, attribute1):
+    def deleteField(self, class1, field1):
         if class1 in self.editor.classes:
             item = self.editor.classes[class1]
-            if attribute1 in item.attributtesSets:
-                self.editor.classes[class1].attributtesSets.remove(attribute1)
-                self.ui.uiFeedback(f'Attribute `{attribute1}` has been removed from class {class1}')
-                self.ui.updateAttributesBox(class1)
+            
+            if Field(field1) in item.fields:
+                self.editor.classes[class1].fields.remove(Field(field1))
+                self.ui.uiFeedback(f'Field `{field1}` has been removed from class {class1}')
             else:
-                self.ui.uiError(f'Attribute `{attribute1}` does not exist in class {class1}')
+                self.ui.uiError(f'Field `{field1}` does not exist in class {class1}')
         else:
             self.ui.uiError(f'Class {class1} does not exist')
 
     # Fuction will check to see if class exists, and whether the given attribute does not already exists. If both parameters pass the attribute will be added to the class #
-    def addAttribute(self, class1, attribute1):
+    def addField(self, class1, field1):
         if class1 in self.editor.classes:
             item = self.editor.classes[class1]
-            if attribute1 in item.attributtesSets:
-                self.ui.uiError(f'Attribute `{attribute1}` already exists in the class {class1}')
+            if Field(field1) in item.fields:
+                self.ui.uiError(f'Field `{field1}` already exists in the class {class1}')
             else:
-                self.editor.classes[class1].attributtesSets.add(attribute1)
-                self.ui.uiFeedback(f'Attribute `{attribute1}` has been added to class {class1}')
-                self.ui.updateAttributesBox(class1)
+                self.editor.classes[class1].fields.append(Field(field1))
+                self.ui.uiFeedback(f'Field `{field1}` has been added to class {class1}')
+        else:
+            self.ui.uiError(f'Class {class1} does not exist')
+
+    # Adds a method to a class with a given list of parameters
+    def addMethod(self, class1, method, params):
+        if class1 in self.editor.classes:
+            item = self.editor.classes[class1]
+            if Method(method) in item.methods:
+                self.ui.uiError(f'Method `{method}` already exists in the class {class1}')
+            else:
+                self.editor.classes[class1].methods.append(Method(method, params))
+                self.ui.uiFeedback(f'Method `{method}` has been added to class {class1}')
+        else:
+            self.ui.uiError(f'Class {class1} does not exist')
+
+    # Deletes a method from a class regardless of the parameters
+    def deleteMethod(self, class1, method):
+        if class1 in self.editor.classes:
+            item = self.editor.classes[class1]
+            if Method(method) in item.methods:
+                self.editor.classes[class1].methods.remove(Method(method))
+                self.ui.uiFeedback(f'Method `{method}` has been removed from class {class1}')
+            else:
+                self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
+        else:
+            self.ui.uiError(f'Class {class1} does not exist')
+
+    # Renames a method from a class without changing the parameters
+    def renameMethod(self, class1, method1, method2):
+        if class1 in self.editor.classes:
+            item = self.editor.classes[class1]
+            if Method(method1) in item.methods:
+                if Method(method2) not in item.methods:
+                    idx = self.editor.classes[class1].methods.index(Method(method1))
+                    obj = self.editor.classes[class1].methods.pop(idx)
+                    self.editor.classes[class1].methods.append(Method(method2, obj.params))
+                    self.ui.uiFeedback(f'Method `{method1}` renamed to {method2}!')
+                else:
+                    self.ui.uiError(f'Method `{method2}` already exists in the class {class1}')
+            else:
+                self.ui.uiError(f'There is no method named `{method1}` in the class {class1}')
+    
+    # Removes a single parameter from a method
+    def removeParameter(self, class1, method, param):
+        if class1 in self.editor.classes:
+            item = self.editor.classes[class1]
+            if Method(method) in item.methods:
+                idx = self.editor.classes[class1].methods.index(Method(method))
+                try:
+                    self.editor.classes[class1].methods[idx].params.remove(param)
+                except ValueError:
+                    self.ui.uiError(f'Method {method} did not have the parameter {param}!')
+                    return
+                self.ui.uiFeedback(f'Parameter `{param}` has been removed from method {method}!')
+            else:
+                self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
+        else:
+            self.ui.uiError(f'Class {class1} does not exist')
+
+    # Removes every parameter from a method in a given class
+    def clearParameters(self, class1, method):
+        if class1 in self.editor.classes:
+            item = self.editor.classes[class1]
+            if Method(method) in item.methods:
+                idx = self.editor.classes[class1].methods.index(Method(method))
+                self.editor.classes[class1].methods[idx].params.clear()
+                self.ui.uiFeedback(f'Parameters have been removed from method {method}!')
+            else:
+                self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
+        else:
+            self.ui.uiError(f'Class {class1} does not exist')
+
+    # Renames a single parameter
+    def renameParameter(self, class1, method, param1, param2):
+        if class1 in self.editor.classes:
+            item = self.editor.classes[class1]
+            if Method(method) in item.methods:
+                idx = self.editor.classes[class1].methods.index(Method(method))
+                if param1 not in self.editor.classes[class1].methods[idx].params:
+                    self.ui.uiError(f'Method `{method}` does not have a parameter named `{param1}`')
+                    return
+                idx2 = self.editor.classes[class1].methods[idx].params.index(param1)
+                self.editor.classes[class1].methods[idx].params[idx2] = param2
+                self.ui.uiFeedback(f'Parameter `{param1}` has been renamed to `{param2}`!')
+            else:
+                self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
+        else:
+            self.ui.uiError(f'Class {class1} does not exist')
+    
+    # Replaces entire parameter list
+    def replaceParameters(self, class1, method, params):
+        if class1 in self.editor.classes:
+            item = self.editor.classes[class1]
+            if Method(method) in item.methods:
+                idx = self.editor.classes[class1].methods.index(Method(method))
+                self.editor.classes[class1].methods[idx].params = params
+                self.ui.uiFeedback(f'Parameter list has been inserted into `{method}`!')
+            else:
+                self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
         else:
             self.ui.uiError(f'Class {class1} does not exist')
 
