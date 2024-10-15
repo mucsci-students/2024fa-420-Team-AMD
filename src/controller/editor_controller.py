@@ -44,11 +44,11 @@ class EditorController:
             del self.editor.classes[name]
             # Deleting relationships that are no longer valid after class deletion
             toRemove = []
-            for (src, dst) in self.editor.relationships:
-                if name == src or name == dst:
-                    toRemove.append((src, dst))
-            for (src, dst) in toRemove:
-                self.editor.relationships.discard((src, dst))
+            for rel in self.editor.relationships:
+                if name == rel.src or name == rel.dst:
+                    toRemove.append(rel)
+            for rel in toRemove:
+                self.editor.relationships.discard(rel)
             self.ui.uiFeedback(f'Deleted class {name}!')
         else:
             self.ui.uiError(f'No class exists with the name `{name}`')
@@ -65,7 +65,6 @@ class EditorController:
 
     # Function which adds a relationship between class1 and class2, which are both strings
     def relationshipAdd(self, class1, class2, typ):
-        # We use tuples to make it simple to check for relationship existence in both orders
         if self.editor.hasRelationship(class1, class2) or self.editor.hasRelationship(class2, class1):
             self.ui.uiError(f'There is already a relationship between `{class1}` and `{class2}`')
         elif class1 not in self.editor.classes:
@@ -92,6 +91,25 @@ class EditorController:
             self.ui.uiError(f'class `{class2}` does not exist')
         else:
             self.ui.uiError(f'there is no relationship between `{class1}` and `{class2}`')
+
+    # Function which changes the type of an existing relationship
+    def relationshipEdit(self, class1, class2, new_typ):
+        if self.editor.hasRelationship(class1, class2) or self.editor.hasRelationship(class2, class1):
+            old_typ = None
+            for rel in self.editor.relationships:
+                if rel.src == class1 and rel.dst == class2:
+                    if rel.typ == new_typ:
+                        self.ui.uiError(f'The relationship from `{class1}` to `{class2}` was already of type {new_typ.name}')
+                        return
+                    old_typ = rel.typ
+                    rel.typ = new_typ
+            self.ui.uiFeedback(f'Changed type of {class1} and {class2}\'s relationship from {old_typ.name} to {new_typ.name}')
+        elif class1 not in self.editor.classes:
+            self.ui.uiError(f'Class `{class1}` does not exist')
+        elif class2 not in self.editor.classes:
+            self.ui.uiError(f'Class `{class2}` does not exist')
+        else:
+            self.ui.uiError(f'There is no relationship from {class1} to {class2}!')
     
     # Function renames given attribute in given class if both exist and new name does not
     def renameAttribute(self, class1, attribute1, attribute2):

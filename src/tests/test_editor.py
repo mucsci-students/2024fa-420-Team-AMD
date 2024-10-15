@@ -33,7 +33,7 @@ class testEditor(unittest.TestCase):
 
         ctrl.classAdd('Foo')
         ctrl.classAdd('Bar')
-        ctrl.relationshipAdd('Foo', 'Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
         ctrl.classAdd('Quo')
 
         before = ctrl.editor.relationships
@@ -142,6 +142,63 @@ class testEditor(unittest.TestCase):
 
         ctrl.relationshipDelete('Foo', 'Baz')
         assert Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships and Relationship('Foo', 'Baz', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship should not have been removed'
+
+    def testRelationshipEditSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.editor.classes['Foo'] = Class('Foo')
+        ctrl.editor.classes['Bar'] = Class('Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
+
+        ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
+        
+        b1 = Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships
+        b2 = Relationship('Foo', 'Bar', Type.Inheritance) in ctrl.editor.relationships
+        assert b1 and b2, 'Relationship was not edited successfully'
+
+    # Failure due to no change
+    def testRelationshipEditFailure1(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.editor.classes['Foo'] = Class('Foo')
+        ctrl.editor.classes['Bar'] = Class('Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
+
+        ctrl.relationshipEdit('Foo', 'Bar', Type.Aggregate)
+        
+        b1 = Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships
+        assert b1, 'Relationship was edited when not supposed to'
+
+    # Failure due to no relationship
+    def testRelationshipEditFailure2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.editor.classes['Foo'] = Class('Foo')
+        ctrl.editor.classes['Bar'] = Class('Bar')
+
+        ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
+        
+        b1 = Relationship('Foo', 'Bar', Type.Inheritance) not in ctrl.editor.relationships
+        assert b1, 'Relationship should not have manifested from nothing'
+
+    # Failure due to no class
+    def testRelationshipEditSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.editor.classes['Foo'] = Class('Foo')
+
+        ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
+        
+        b1 = Relationship('Foo', 'Bar', Type.Inheritance) not in ctrl.editor.relationships
+        assert b1, 'Relationship should not have manifested from nothing'
 
     def testAddAttributeSuccess(self):
         editor = Editor()
