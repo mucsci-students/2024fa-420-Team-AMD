@@ -1,7 +1,8 @@
 from . import ui_interface
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox, simpledialog, filedialog
 from model.relationship_model import Type
+import json
 
 class GUI(ui_interface.UI):
     def __init__(self, controller):
@@ -143,10 +144,10 @@ class GUI(ui_interface.UI):
         relationship_menu.menu.add_command(label="Delete Relationship", command=lambda: self.relationshipCommandPrompt('delete'))
         relationship_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Load", command=lambda: print("Load button clicked")) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, text="Save", command=lambda: print("Save button clicked")) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Save", command=lambda: print("Save button clicked")) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, text="Load", command=lambda: print("Load button clicked")) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
 
@@ -533,6 +534,16 @@ class GUI(ui_interface.UI):
                 self.updateRelationshipLines(class_name)
             
             self.selected_item = None
+    
+    # -------------- SAVE/LOAD FUNCTIONS START ----------------------------------------------------------------
+
+    def save(self):
+        # Open a file dialog to get the save location
+        pass
+
+    def load(self):
+        # Open a file dialog to select a file to load
+        pass
 
     # -------------- DIAGNOSTIC FUNCTIONS START ----------------------------------------------------------------
 
