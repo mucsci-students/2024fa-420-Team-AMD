@@ -78,6 +78,20 @@ class CLI(ui_interface.UI):
                 class1 = input('  First Class in Relationship to Delete: ')
                 class2 = input('  Second Class in Relationship to Delete: ')
                 controller.relationshipDelete(class1, class2)
+            case 'edit':
+                class1 = input('  First Class in Relationship: ')
+                class2 = input('  Second Class in Relationship: ')
+                print('  Type of Relationship to change to:')
+                print(f'    {Type.Aggregate.display()}')
+                print(f'    {Type.Composition.display()}')
+                print(f'    {Type.Inheritance.display()}')
+                print(f'    {Type.Realization.display()}')
+                text = input('  Enter: ').lower()
+                typ = Type.make(text)
+                if typ == None:
+                    self.uiError(f'Cannot determine relationship type from `{text}`')
+                    return
+                controller.relationshipEdit(class1, class2, typ)
             case _:
                 print('Print an error here')
     
