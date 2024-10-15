@@ -1,5 +1,5 @@
 import json
-from .class_model import Class
+from .class_model import Class, Field, Method
 from .relationship_model import Relationship
 
 class Editor:
@@ -19,9 +19,14 @@ class EditorEncoder(json.JSONEncoder):
             return {'classes': list(obj.classes.values()), 'relationships': list(obj.relationships)}
         if isinstance(obj, Class):
             # return {'name': obj.name, 'attributes': list(obj.attributtesSets)}
-            # TODO: make classes for fields and methods so that we can check for them here
-            return {'name': obj.name, 'fields': list(obj.attributtesSets), 'methods': ['nil']}
+            return {'name': obj.name, 'fields': obj.fields, 'methods': obj.methods}
         if isinstance(obj, Relationship):
-            # TODO: I have yet to check the formatting here
             return {'source': obj.src, 'destination': obj.dst, 'type': obj.typ.display()}
+        if isinstance(obj, Field):
+            return {'name': obj.name}
+        if isinstance(obj, Method):
+            # Obj.params is a list of strings, so we map them to objects with a string field
+            # in order to comply with the JSON specification
+            l = list(map(lambda x: {'name': x}, obj.params))
+            return {'name': obj.name, 'params': l}
         return json.JSONEncoder.default(self, obj)
