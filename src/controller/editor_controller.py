@@ -25,7 +25,12 @@ class EditorController:
             for clazz in obj['classes']:
                 self.classAdd(clazz['name'])
                 for attr in clazz['fields']:
-                    self.addAttribute(clazz['name'], attr)
+                    self.addField(clazz['name'], attr['name'])
+                for method in clazz['methods']:
+                    params = []
+                    for p in method['params']:
+                        params.append(p['name'])
+                    self.addMethod(clazz['name'], method['name'], params)
             for rel in obj['relationships']:
                 self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
                         
