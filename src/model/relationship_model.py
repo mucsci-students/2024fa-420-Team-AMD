@@ -35,10 +35,21 @@ class Relationship:
     def __init__(self, src, dst, typ):
         self.src = src
         self.dst = dst
+
+        #makes sure typ is Type
+        if isinstance(typ, str):
+            typ = Type.make(typ.lower())
+            if not typ:
+                raise ValueError(f"Invalid relationship type: {typ}")
+            
         self.typ = typ
+
     
     def __str__(self):
-        return f'{{Src: {self.src}, Dst: {self.dst}, Typ: {self.typ.name}}}'
+        if isinstance(self.typ, Type):
+            return f'{{Src: {self.src}, Dst: {self.dst}, Typ: {self.typ.name}}}'
+        else:
+            return f'{{Src: {self.src}, Dst: {self.dst}, Typ: {self.typ}}}'  # Handle string fallback
     
     def __eq__(self, other):
         return self.src == other.src and self.dst == other.dst
