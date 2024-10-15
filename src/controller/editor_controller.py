@@ -22,12 +22,12 @@ class EditorController:
         with open(filename, 'r') as f:
             data = f.read()
             obj = json.loads(data)
-            for name in obj['classes']:
-                self.classAdd(name)
-                for attr in obj['classes'][name]['attributes']:
-                    self.addAttribute(name, attr)
+            for clazz in obj['classes']:
+                self.classAdd(clazz['name'])
+                for attr in clazz['fields']:
+                    self.addAttribute(clazz['name'], attr)
             for rel in obj['relationships']:
-                self.relationshipAdd(rel['src'], rel['dst'], Type.make(rel['type'].lower()))
+                self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
                         
         self.ui.uiFeedback(f'=--> Loaded from {filename}!')
 
