@@ -140,6 +140,7 @@ class EditorController:
                     self.editor.classes[class1].fields.remove(Field(field1))
                     self.editor.classes[class1].fields.append(Field(field2))
                     self.ui.uiFeedback(f'Field `{field1}` renamed to {field2}!')
+                    self.ui.updateAttributesBox(class1)  # Update the UI
                 else:
                     self.ui.uiError(f'Field `{field2}` already exists in the class {class1}')
             else:
@@ -153,6 +154,7 @@ class EditorController:
             if Field(field1) in item.fields:
                 self.editor.classes[class1].fields.remove(Field(field1))
                 self.ui.uiFeedback(f'Field `{field1}` has been removed from class {class1}')
+                self.ui.updateAttributesBox(class1)  # Update the UI
             else:
                 self.ui.uiError(f'Field `{field1}` does not exist in class {class1}')
         else:
@@ -167,6 +169,7 @@ class EditorController:
             else:
                 self.editor.classes[class1].fields.append(Field(field1))
                 self.ui.uiFeedback(f'Field `{field1}` has been added to class {class1}')
+                self.ui.updateAttributesBox(class1)  # Update the UI
         else:
             self.ui.uiError(f'Class {class1} does not exist')
 
@@ -179,6 +182,7 @@ class EditorController:
             else:
                 self.editor.classes[class1].methods.append(Method(method, params))
                 self.ui.uiFeedback(f'Method `{method}` has been added to class {class1}')
+                self.ui.updateAttributesBox(class1)  # Update the UI
         else:
             self.ui.uiError(f'Class {class1} does not exist')
 
@@ -189,6 +193,7 @@ class EditorController:
             if Method(method) in item.methods:
                 self.editor.classes[class1].methods.remove(Method(method))
                 self.ui.uiFeedback(f'Method `{method}` has been removed from class {class1}')
+                self.ui.updateAttributesBox(class1)  # Update the UI
             else:
                 self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
         else:
@@ -204,6 +209,7 @@ class EditorController:
                     obj = self.editor.classes[class1].methods.pop(idx)
                     self.editor.classes[class1].methods.append(Method(method2, obj.params))
                     self.ui.uiFeedback(f'Method `{method1}` renamed to {method2}!')
+                    self.ui.updateAttributesBox(class1)  # Update the UI
                 else:
                     self.ui.uiError(f'Method `{method2}` already exists in the class {class1}')
             else:
@@ -221,6 +227,7 @@ class EditorController:
                     self.ui.uiError(f'Method {method} did not have the parameter {param}!')
                     return
                 self.ui.uiFeedback(f'Parameter `{param}` has been removed from method {method}!')
+                self.ui.updateAttributesBox(class1)  # Update the UI
             else:
                 self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
         else:
@@ -234,6 +241,7 @@ class EditorController:
                 idx = self.editor.classes[class1].methods.index(Method(method))
                 self.editor.classes[class1].methods[idx].params.clear()
                 self.ui.uiFeedback(f'Parameters have been removed from method {method}!')
+                self.ui.updateAttributesBox(class1)  # Update the UI
             else:
                 self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
         else:
@@ -251,6 +259,7 @@ class EditorController:
                 idx2 = self.editor.classes[class1].methods[idx].params.index(param1)
                 self.editor.classes[class1].methods[idx].params[idx2] = param2
                 self.ui.uiFeedback(f'Parameter `{param1}` has been renamed to `{param2}`!')
+                self.ui.updateAttributesBox(class1)  # Update the UI
             else:
                 self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
         else:
@@ -264,6 +273,7 @@ class EditorController:
                 idx = self.editor.classes[class1].methods.index(Method(method))
                 self.editor.classes[class1].methods[idx].params = params
                 self.ui.uiFeedback(f'Parameter list has been inserted into `{method}`!')
+                self.ui.updateAttributesBox(class1)  # Update the UI
             else:
                 self.ui.uiError(f'Method `{method}` does not exist in class {class1}')
         else:

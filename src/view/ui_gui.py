@@ -2,6 +2,7 @@ from . import ui_interface
 import tkinter as tk
 from tkinter import messagebox, simpledialog, filedialog
 from model.relationship_model import Type
+from model.class_model import Field, Method
 import json
 
 class GUI(ui_interface.UI):
@@ -57,35 +58,101 @@ class GUI(ui_interface.UI):
             case _:
                 self.uiError("Invalid action.")
 
-    # prompt the user for any attribute commands
-    def attributeCommandPrompt(self, action):
+    # prompt the user for any attribute commands (Now managing Fields)
+    def fieldsCommandPrompt(self, action):
         match action:
             case 'add':
-                class_name = self.uiQuery("Enter the class to add an attribute to:")
+                class_name = self.uiQuery("Class to add Field to:")
                 if class_name:
-                    attribute_name = self.uiQuery("Enter the name of the attribute to add:")
-                    if attribute_name:
-                        self.controller.addAttribute(class_name, attribute_name)
+                    field_name = self.uiQuery("Field name:")
+                    if field_name:
+                        self.controller.addField(class_name, field_name)
 
             case 'delete':
-                class_name = self.uiQuery("Enter the class to delete an attribute from:")
+                class_name = self.uiQuery("Class to delete field from:")
                 if class_name:
-                    attribute_name = self.uiQuery("Enter the name of the attribute to delete:")
-                    if attribute_name:
-                        self.controller.deleteAttribute(class_name, attribute_name)
+                    field_name = self.uiQuery("Field to delete:")
+                    if field_name:
+                        self.controller.deleteField(class_name, field_name)
 
             case 'rename':
-                class_name = self.uiQuery("Enter the class whose attribute you would like to rename:")
+                class_name = self.uiQuery("Class who's field you would like to rename:")
                 if class_name:
-                    old_attribute_name = self.uiQuery("Enter the current name of the attribute:")
-                    if old_attribute_name:
-                        new_attribute_name = self.uiQuery("Enter the new name of the attribute:")
-                        if new_attribute_name:
-                            self.controller.renameAttribute(class_name, old_attribute_name, new_attribute_name)
+                    old_field_name = self.uiQuery("Field you would like to rename:")
+                    if old_field_name:
+                        new_field_name = self.uiQuery("Field name you would like to change to:")
+                        if new_field_name:
+                            self.controller.renameField(class_name, old_field_name, new_field_name)
 
             case _:
                 self.uiError("Invalid action.")
-    
+
+    # prompt the user for method commands
+    def methodCommandPrompt(self, action):
+        match action:
+            case 'add':
+                class_name = self.uiQuery("Class to add Method to:")
+                if class_name:
+                    method_name = self.uiQuery("Method name:")
+                    if method_name:
+                        params = self.uiQuery("Input a list of parameters in order (comma separated):")
+                        param_list = params.split(",") if params else []
+                        self.controller.addMethod(class_name, method_name, param_list)
+
+            case 'delete':
+                class_name = self.uiQuery("Class to Delete method from:")
+                if class_name:
+                    method_name = self.uiQuery("Method to delete:")
+                    if method_name:
+                        self.controller.deleteMethod(class_name, method_name)
+
+            case 'rename':
+                class_name = self.uiQuery("Class who's method you would like to rename:")
+                if class_name:
+                    old_method_name = self.uiQuery("Method you would like to rename:")
+                    if old_method_name:
+                        new_method_name = self.uiQuery("Method name you would like to change to:")
+                        if new_method_name:
+                            self.controller.renameMethod(class_name, old_method_name, new_method_name)
+
+            case _:
+                self.uiError("Invalid action.")         
+
+    # Prompt the user for parameter commands
+    def parameterCommandPrompt(self, action):
+        match action:
+            case 'remove':
+                class_name = self.uiQuery("Class with the desired Method:")
+                method_name = self.uiQuery("Method to remove parameter from:")
+                if class_name and method_name:
+                    param_name = self.uiQuery("Parameter to remove:")
+                    if param_name:
+                        self.controller.removeParameter(class_name, method_name, param_name)
+
+            case 'clear':
+                class_name = self.uiQuery("Class with the desired method:")
+                method_name = self.uiQuery("Method to clear parameters from:")
+                if class_name and method_name:
+                    self.controller.clearParameters(class_name, method_name)
+
+            case 'rename':
+                class_name = self.uiQuery("Class with the desired method:")
+                method_name = self.uiQuery("Method to clear parameters from:")
+                if class_name and method_name:
+                    old_param_name = self.uiQuery("Parameter to rename:")
+                    new_param_name = self.uiQuery("New parameter name:")
+                    if old_param_name and new_param_name:
+                        self.controller.renameParameter(class_name, method_name, old_param_name, new_param_name)
+
+            case 'change':
+                class_name = self.uiQuery("Class with the desired method:")
+                method_name = self.uiQuery("Method with parameters to change:")
+                if class_name and method_name:
+                    param_list = self.uiQuery("Input a list of parameters in order (comma-separated):").split(",")
+                    self.controller.replaceParameters(class_name, method_name, [param.strip() for param in param_list])
+
+            case _:
+                self.uiError("Invalid action.")        
 
     # Prompt the user for relationship commands
     def relationshipCommandPrompt(self, action):
@@ -127,14 +194,33 @@ class GUI(ui_interface.UI):
         class_menu.menu.add_command(label="Rename Class", command=lambda: self.classCommandPrompt('rename'))
         class_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
-        # Create a dropdown for 'Attributes'
-        attribute_menu = tk.Menubutton(self.toolbar, text="Attributes", relief=tk.RAISED)
-        attribute_menu.menu = tk.Menu(attribute_menu, tearoff=0)
-        attribute_menu["menu"] = attribute_menu.menu
-        attribute_menu.menu.add_command(label="Add Attribute", command=lambda: self.attributeCommandPrompt('add'))          #command=self.attributesCommands
-        attribute_menu.menu.add_command(label="Delete Attribute", command=lambda: self.attributeCommandPrompt('delete'))
-        attribute_menu.menu.add_command(label="Rename Attribute", command=lambda: self.attributeCommandPrompt('rename'))
-        attribute_menu.pack(side=tk.LEFT, padx=2, pady=2)
+        # Create a dropdown for 'Fields'
+        field_menu = tk.Menubutton(self.toolbar, text="Fields", relief=tk.RAISED)
+        field_menu.menu = tk.Menu(field_menu, tearoff=0)
+        field_menu["menu"] = field_menu.menu
+        field_menu.menu.add_command(label="Add Field", command=lambda: self.fieldsCommandPrompt('add'))
+        field_menu.menu.add_command(label="Delete Field", command=lambda: self.fieldsCommandPrompt('delete'))
+        field_menu.menu.add_command(label="Rename Field", command=lambda: self.fieldsCommandPrompt('rename'))
+        field_menu.pack(side=tk.LEFT, padx=2, pady=2)
+
+        # Create a dropdown for 'Methods'
+        method_menu = tk.Menubutton(self.toolbar, text="Methods", relief=tk.RAISED)
+        method_menu.menu = tk.Menu(method_menu, tearoff=0)
+        method_menu["menu"] = method_menu.menu
+        method_menu.menu.add_command(label="Add Method", command=lambda: self.methodCommandPrompt('add'))
+        method_menu.menu.add_command(label="Delete Method", command=lambda: self.methodCommandPrompt('delete'))
+        method_menu.menu.add_command(label="Rename Method", command=lambda: self.methodCommandPrompt('rename'))
+        method_menu.pack(side=tk.LEFT, padx=2, pady=2)
+
+        # Create a dropdown for 'Parameters'
+        param_menu = tk.Menubutton(self.toolbar, text="Parameters", relief=tk.RAISED)
+        param_menu.menu = tk.Menu(param_menu, tearoff=0)
+        param_menu["menu"] = param_menu.menu
+        param_menu.menu.add_command(label="Remove Parameter", command=lambda: self.parametersCommandPrompt('remove'))
+        param_menu.menu.add_command(label="Clear Parameter", command=lambda: self.parametersCommandPrompt('clear'))
+        param_menu.menu.add_command(label="Rename Parameter", command=lambda: self.parametersCommandPrompt('rename'))
+        param_menu.menu.add_command(label="Change Parameter", command=lambda: self.parametersCommandPrompt('change'))
+        param_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Relationships'
         relationship_menu = tk.Menubutton(self.toolbar, text="Relationships", relief=tk.RAISED)
@@ -144,24 +230,30 @@ class GUI(ui_interface.UI):
         relationship_menu.menu.add_command(label="Delete Relationship", command=lambda: self.relationshipCommandPrompt('delete'))
         relationship_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Save", command=lambda: print("Save button clicked")) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, text="Save", command=lambda: self.controller.save()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Load", command=lambda: print("Load button clicked")) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, text="Load", command=lambda: self.controller.load()) #command=self.relationshipCommands)
+        button_save.pack(side=tk.LEFT, padx=2, pady=2)
+
+        button_save = tk.Button(self.toolbar, text="Help", command=lambda: self.showHelp()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
 
 # -------------- CLASS VISUALS START ---------------------------------------------------------------------------------------
 
-    # Creates a new box for a class. Leaves space for attributes
-    def addClassBox(self, class_name, attributes=None):
-        if attributes is None:
-            attributes = []
+    # Creates a new box for a class. Leaves space for fields
+    def addClassBox(self, class_name, fields=None, methods=None):
+        if fields is None:
+            fields = []
+
+        if methods is None:
+            methods = []
 
         # Calculate box dimensions
-        box_width = 100
+        box_width = 150
         # Height adjusts based on the number of attributes, each attribute taking 20 pixels of height
-        box_height = 50 + len(attributes) * 20
+        box_height = 50 + (len(fields) + len(methods)) * 20
 
         # Draw the rectangle (box) for the class and its attributes
         box = self.canvas.create_rectangle(self.next_x, self.next_y,
@@ -172,33 +264,48 @@ class GUI(ui_interface.UI):
         text_class = self.canvas.create_text(self.next_x + box_width / 2, self.next_y + 25,
                                             text=class_name, font=('Helvetica', 10, 'bold'))
 
-        # Draw the attributes below the class name
-        text_attributes = []
-        for i, attribute in enumerate(attributes):
+        # Draw the fields below the class name
+        text_fields = []
+        for i, field in enumerate(fields):
             text_y = self.next_y + 50 + i * 20  # Starting below the class name
-            attr_text = self.canvas.create_text(self.next_x + box_width / 2, text_y, text=attribute)
-            text_attributes.append(attr_text)
+            field_text = self.canvas.create_text(self.next_x + box_width / 2, text_y, text=f"Field: {field.name}")
+            text_fields.append(field_text)
+
+        # Draw the methods and parameters below the fields
+        text_methods = []
+        for i, method in enumerate(methods):
+            method_params = ', '.join(method.params)
+            text_y = self.next_y + 50 + (len(fields) + i) * 20  # Starting below the fields
+            method_text = self.canvas.create_text(self.next_x + box_width / 2, text_y,
+                                                text=f"Method: {method.name}({method_params})")
+            text_methods.append(method_text)
 
         # Store the box and texts (class name + attributes) in a dictionary
-        self.box_positions[class_name] = (box, text_class, text_attributes)
+        self.box_positions[class_name] = (box, text_class, text_fields, text_methods)
 
         # Bind mouse events for dragging (move box and all texts together)
         self.canvas.tag_bind(box, '<Button-1>', lambda event, item=box: self.on_box_click(event, item))
         self.canvas.tag_bind(text_class, '<Button-1>', lambda event, item=box: self.on_box_click(event, item))  # Link text to the box
-        for attr_text in text_attributes:
-            self.canvas.tag_bind(attr_text, '<Button-1>', lambda event, item=box: self.on_box_click(event, item))  # Link attributes to the box
+        for text_field in text_fields:
+            self.canvas.tag_bind(text_field, '<Button-1>', lambda event, item=box: self.on_box_click(event, item))  # Link fields to the box
+        for text_method in text_methods:
+            self.canvas.tag_bind(text_method, '<Button-1>', lambda event, item=box: self.on_box_click(event, item))  # Link methods to the box
 
         # Drag event to move box and all related texts
         self.canvas.tag_bind(box, '<B1-Motion>', lambda event, name=class_name: self.on_box_drag(event, name))
         self.canvas.tag_bind(text_class, '<B1-Motion>', lambda event, name=class_name: self.on_box_drag(event, name))
-        for attr_text in text_attributes:
-            self.canvas.tag_bind(attr_text, '<B1-Motion>', lambda event, name=class_name: self.on_box_drag(event, name))
+        for text_field in text_fields:
+            self.canvas.tag_bind(text_field, '<B1-Motion>', lambda event, name=class_name: self.on_box_drag(event, name))
+        for text_method in text_methods:
+            self.canvas.tag_bind(text_method, '<B1-Motion>', lambda event, name=class_name: self.on_box_drag(event, name))
 
         # Release event (for all elements)
         self.canvas.tag_bind(box, '<ButtonRelease-1>', self.on_box_release)
         self.canvas.tag_bind(text_class, '<ButtonRelease-1>', self.on_box_release)
-        for attr_text in text_attributes:
-            self.canvas.tag_bind(attr_text, '<ButtonRelease-1>', self.on_box_release)
+        for text_field in text_fields:
+            self.canvas.tag_bind(text_field, '<ButtonRelease-1>', self.on_box_release)
+        for text_method in text_methods:
+            self.canvas.tag_bind(text_method, '<ButtonRelease-1>', self.on_box_release)
 
         # Store the position for the next box
         self.next_x += box_width + 20
@@ -208,13 +315,15 @@ class GUI(ui_interface.UI):
 
     def deleteClassBox(self, class_name):
         if class_name in self.box_positions:
-            box, text_class, text_attributes = self.box_positions[class_name]
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]
 
-            # Delete the class box and all associated texts (class name + attributes)
+            # Delete the class box and all associated texts (class name + fields + methods)
             self.canvas.delete(box)  # Delete the box itself
             self.canvas.delete(text_class)  # Delete the class name text
-            for text_attr in text_attributes:  # Delete all the attribute texts
-                self.canvas.delete(text_attr)
+            for text_field in text_fields:  # Delete all the fields text
+                self.canvas.delete(text_field)
+            for text_method in text_methods:  # Delete all the fields text
+                self.canvas.delete(text_method)
 
             # Remove any relationship lines connected to this class
             to_delete = []
@@ -269,33 +378,44 @@ class GUI(ui_interface.UI):
     # Redraw the class box and attributes in the canvas after changes.
     def updateAttributesBox(self, class_name):
         if class_name in self.box_positions:
-            # Get the current class data (including attributes)
-            box, text_class, text_attributes = self.box_positions[class_name]
+            # Get the current class data (including fields and methods)
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]
 
-            # Get the current attributes from the editor model
-            attributes = list(self.controller.editor.classes[class_name].attributtesSets)
+            # Get the current fields and methods from the editor model
+            fields = self.controller.editor.classes[class_name].fields
+            methods = self.controller.editor.classes[class_name].methods
 
-            # Clear the old attributes text from the canvas
-            for text_attr in text_attributes:
-                self.canvas.delete(text_attr)
+            # Clear the old fields and methods text from the canvas
+            for text_field in text_fields:
+                self.canvas.delete(text_field)
+            for text_method in text_methods:
+                self.canvas.delete(text_method)
 
-            # Calculate new height based on the number of attributes
-            box_height = 50 + len(attributes) * 20
+            # Calculate new height based on the number of fields and methods
+            box_height = 50 + (len(fields) + len(methods)) * 20
             box_coords = self.canvas.coords(box)
             box_width = box_coords[2] - box_coords[0]
 
-            # Resize the box to accommodate the new number of attributes
+            # Resize the box to accommodate the new number of fields and methods
             self.canvas.coords(box, box_coords[0], box_coords[1], box_coords[0] + box_width, box_coords[1] + box_height)
 
-            # Redraw the attributes
-            text_attributes = []
-            for i, attribute in enumerate(attributes):
+            # Redraw the fields and methods
+            text_fields = []
+            for i, field in enumerate(fields):
                 text_y = box_coords[1] + 50 + i * 20  # Starting below the class name
-                attr_text = self.canvas.create_text(box_coords[0] + box_width / 2, text_y, text=attribute)
-                text_attributes.append(attr_text)
+                field_text = self.canvas.create_text(box_coords[0] + box_width / 2, text_y, text=f"Field: {field.name}")
+                text_fields.append(field_text)
 
-            # Update the stored attributes in the box_positions dictionary
-            self.box_positions[class_name] = (box, text_class, text_attributes)
+            text_methods = []
+            for i, method in enumerate(methods):
+                method_params = ', '.join(method.params)
+                text_y = box_coords[1] + 50 + (len(fields) + i) * 20  # Starting below the fields
+                method_text = self.canvas.create_text(box_coords[0] + box_width / 2, text_y,
+                                                    text=f"Method: {method.name}({method_params})")
+                text_methods.append(method_text)
+
+            # Update the stored fields and methods in the box_positions dictionary
+            self.box_positions[class_name] = (box, text_class, text_fields, text_methods)
         else:
             self.uiError(f'Class "{class_name}" does not exist.')
 
@@ -312,8 +432,8 @@ class GUI(ui_interface.UI):
             
         # Draws a relationship line between two classes.
         if class1 in self.box_positions and class2 in self.box_positions:
-            box1, _, _ = self.box_positions[class1]
-            box2, _, _ = self.box_positions[class2]
+            box1, _, _, _ = self.box_positions[class1]
+            box2, _, _, _ = self.box_positions[class2]
 
             # Get the left and right centers of both boxes
             x1_right, y1_right = self.getBoxRightCenter(box1)
@@ -471,6 +591,63 @@ class GUI(ui_interface.UI):
                 # Redraw the relationship line
                 self.drawRelationshipLine(related_class, class_name, relationship_type)
 
+    # ------------------- HELP BUTTON FUNCTION ------------------------------------------------------------
+
+    def showHelp(self):
+        # Create a new top-level window for help
+        help_window = tk.Toplevel(self.root)
+        help_window.title("Help")
+        
+        # Create a scrollable text box for displaying help information
+        text = tk.Text(help_window, wrap="word", height=25, width=80)
+        text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Add a scrollbar
+        scrollbar = tk.Scrollbar(help_window, command=text.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        text.config(yscrollcommand=scrollbar.set)
+        
+        # Add the help content
+        help_content = """
+    Class Commands:
+        add: Creates a new class
+        delete: Deletes an existing class
+        rename: Renames an existing class
+
+    Relationship Commands:
+        add: Creates a typed relationship between two classes
+        delete: Deletes an existing relationship between two classes
+        edit: Edits the type of an existing relationship
+
+    Field Commands:
+        add: Creates a new field for a class
+        delete: Deletes an existing field
+        rename: Renames an existing field
+
+    Method Commands:
+        add: Creates a new method for a class
+        delete: Deletes an existing method
+        rename: Renames an existing method
+
+    Parameter Commands:
+        remove: Removes a parameter from a method
+        clear: Clears all parameters within a method
+        rename: Renames a parameter within a method
+        change: Specifies a new list of parameters for a method
+
+    Save Command:
+        Saves to a JSON format
+
+    Load Command:
+        Loads from a JSON format
+        """
+
+        # Insert the help content into the text box
+        text.insert(tk.END, help_content)
+
+        # Make the text box read-only
+        text.config(state=tk.DISABLED)
+
     # ------------------- BOX VISUALS AND MOVEMENT FUNCTIONS START ----------------------------------------------------
 
     def getBoxLeftCenter(self, box):
@@ -500,7 +677,7 @@ class GUI(ui_interface.UI):
             y = event.y - self.offset_y
 
             # Move the box
-            box, text_class, text_attributes = self.box_positions[class_name]
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]
             box_coords = self.canvas.coords(box)
             box_width = box_coords[2] - box_coords[0]
             box_height = box_coords[3] - box_coords[1]
@@ -511,20 +688,24 @@ class GUI(ui_interface.UI):
             # Move the class name text
             self.canvas.coords(text_class, x + box_width / 2, y + 25)
 
-            # Move each attribute text
-            for i, text_attr in enumerate(text_attributes):
+            # Move each field text
+            for i, text_field in enumerate(text_fields):
                 text_y = y + 50 + i * 20  # Adjust the Y position for each attribute
-                self.canvas.coords(text_attr, x + box_width / 2, text_y)
+                self.canvas.coords(text_field, x + box_width / 2, text_y)
+
+            # Move each method text
+            for i, text_method in enumerate(text_methods):
+                text_y = y + 50 + (len(text_fields) + i) * 20  # Adjust the Y position for each method
+                self.canvas.coords(text_method, x + box_width / 2, text_y)
 
             # Continuously update the relationship lines as the box moves
-            # self.updateRelationshipLines(class_name)
 
     def on_box_release(self, event):
         # Called when the user releases the mouse after dragging a box
         if self.selected_item:
             class_name = None
             # Find the class name associated with the selected item
-            for name, (box, _, _) in self.box_positions.items():
+            for name, (box, _, _, _) in self.box_positions.items():
                 if box == self.selected_item:
                     class_name = name
                     break
@@ -534,16 +715,6 @@ class GUI(ui_interface.UI):
                 self.updateRelationshipLines(class_name)
             
             self.selected_item = None
-    
-    # -------------- SAVE/LOAD FUNCTIONS START ----------------------------------------------------------------
-
-    def save(self):
-        # Open a file dialog to get the save location
-        pass
-
-    def load(self):
-        # Open a file dialog to select a file to load
-        pass
 
     # -------------- DIAGNOSTIC FUNCTIONS START ----------------------------------------------------------------
 
