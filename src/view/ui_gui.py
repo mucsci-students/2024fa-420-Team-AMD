@@ -1,6 +1,7 @@
 from . import ui_interface
 import tkinter as tk
 from tkinter import messagebox, simpledialog
+from model.relationship_model import Type
 
 class GUI(ui_interface.UI):
     def __init__(self, controller):
@@ -84,28 +85,29 @@ class GUI(ui_interface.UI):
             case _:
                 self.uiError("Invalid action.")
     
+
     # Prompt the user for relationship commands
     def relationshipCommandPrompt(self, action):
         match action:
             case 'add':
                 class1 = self.uiQuery("First Class in Relationship: ")
                 class2 = self.uiQuery("Second Class in Relationship: ")
-                if class1 and class2:
-                    relationship_type = self.uiQuery("Enter the relationship type (aggregation, composition, inheritance, realization):")
-                    if relationship_type in ['aggregation', 'composition', 'inheritance', 'realization']:
-                        # Add the relationship in the model
-                        self.controller.relationshipAdd(class1, class2)
-                        # Draw the relationship line on the canvas based on the type
-                        self.drawRelationshipLine(class1, class2, relationship_type)
-                    else:
-                        self.uiError("Invalid relationship type. Valid types are: aggregation, composition, inheritance, realization.")
 
+                if class1 and class2:
+                    # Prompt for the relationship type
+                    relationship_type = self.uiQuery("Enter relationship type (aggregate, composition, inheritance, realization): ")
+
+                    # Validate the relationship type using Type.make
+                    relationship_type_enum = Type.make(relationship_type)
+                    if relationship_type_enum:
+                        self.controller.relationshipAdd(class1, class2, relationship_type_enum)
+                    else:
+                        self.uiError(f'Invalid relationship type: {relationship_type}')
             case 'delete':
                 class1 = self.uiQuery("First Class in Relationship to Delete: ")
                 class2 = self.uiQuery("Second Class in Relationship to Delete: ")
                 if class1 and class2:
                     self.controller.relationshipDelete(class1, class2)
-
             case _:
                 self.uiError("Invalid action.")
     
@@ -140,15 +142,6 @@ class GUI(ui_interface.UI):
         relationship_menu.menu.add_command(label="Add Relationship", command=lambda: self.relationshipCommandPrompt('add'))         ##command=self.relationshipCommands
         relationship_menu.menu.add_command(label="Delete Relationship", command=lambda: self.relationshipCommandPrompt('delete'))
         relationship_menu.pack(side=tk.LEFT, padx=2, pady=2)
-
-        # Create a dropdown for 'List'
-        list_menu = tk.Menubutton(self.toolbar, text="List", relief=tk.RAISED)
-        list_menu.menu = tk.Menu(list_menu, tearoff=0)
-        list_menu["menu"] = list_menu.menu
-        list_menu.menu.add_command(label="List All Classes", command=lambda: print("List All Classes clicked"))
-        list_menu.menu.add_command(label="List Class", command=lambda: print("List All Classes clicked"))               # self.list_class_selection function: add a dropdown option to list a specific class
-        list_menu.menu.add_command(label="List Relationships", command=lambda: print("List Relationships clicked"))
-        list_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         button_save = tk.Button(self.toolbar, text="Load", command=lambda: print("Load button clicked")) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
@@ -226,7 +219,7 @@ class GUI(ui_interface.UI):
             to_delete = []
             for (class1, class2) in self.relationship_lines.keys():
                 if class1 == class_name or class2 == class_name:
-                    self.canvas.delete(self.relationship_lines[(class1, class2)])
+                    self.deleteRelationshipLine(class1, class2)
                     to_delete.append((class1, class2))
             
             for key in to_delete:
@@ -308,7 +301,15 @@ class GUI(ui_interface.UI):
     # -------------------- Relationship Visuals START ----------------------------------------------------
     
     def drawRelationshipLine(self, class1, class2, relationship_type):
-        # Draw a relationship line between two classes.
+        # Ensure the relationship_type is converted from string to Type if necessary
+
+        if isinstance(relationship_type, str):
+            relationship_type = Type.make(relationship_type)
+            if not relationship_type:
+                self.uiError(f"Invalid relationship type: {relationship_type}")
+                return
+            
+        # Draws a relationship line between two classes.
         if class1 in self.box_positions and class2 in self.box_positions:
             box1, _, _ = self.box_positions[class1]
             box2, _, _ = self.box_positions[class2]
@@ -331,98 +332,142 @@ class GUI(ui_interface.UI):
                 x2, y2 = x1_left, y1_left
                 arrow_direction = tk.FIRST  # Arrow should point towards class1
 
-            # Draw the line based on the relationship type, and place the arrow/shape accordingly
-            if relationship_type == 'aggregation':
-                line = self.drawAggregationLine(x1, y1, x2, y2, arrow_direction)
-            elif relationship_type == 'composition':
-                line = self.drawCompositionLine(x1, y1, x2, y2, arrow_direction)
-            elif relationship_type == 'inheritance':
-                line = self.drawInheritanceLine(x1, y1, x2, y2, arrow_direction)
-            elif relationship_type == 'realization':
-                line = self.drawRealizationLine(x1, y1, x2, y2, arrow_direction)
+            # Initialize shape variable to None
+            line, shape = None, None
 
-            # Store the line in the relationship_lines dictionary
-            self.relationship_lines[(class1, class2)] = line
+            # Call the appropriate function based on the relationship type
+            if relationship_type == Type.Aggregate:
+                line, shape = self.drawAggregationLine(x1, y1, x2, y2, arrow_direction)
+            elif relationship_type == Type.Composition:
+                line, shape = self.drawCompositionLine(x1, y1, x2, y2, arrow_direction)
+            elif relationship_type == Type.Inheritance:
+                line, shape = self.drawInheritanceLine(x1, y1, x2, y2, arrow_direction)
+            elif relationship_type == Type.Realization:
+                line, shape = self.drawRealizationLine(x1, y1, x2, y2, arrow_direction)
+            else:
+                # If an invalid relationship_type is provided, raise an error
+                self.uiError(f"Invalid relationship type: {relationship_type}")
+                return  # Exit early if an invalid type is encountered
+
+            self.relationship_lines[(class1, class2)] = (line, shape)
+
+    # Removes the relationship line and its shape (diamond, triangle)
+    def deleteRelationshipLine(self, class1, class2):
+        if (class1, class2) in self.relationship_lines:
+            line, shape = self.relationship_lines[(class1, class2)]
+            self.canvas.delete(line)
+            self.canvas.delete(shape)
+            del self.relationship_lines[(class1, class2)]
+        elif (class2, class1) in self.relationship_lines:
+            line, shape = self.relationship_lines[(class2, class1)]
+            self.canvas.delete(line)
+            self.canvas.delete(shape)
+            del self.relationship_lines[(class2, class1)]
 
     def drawAggregationLine(self, x1, y1, x2, y2, arrow_direction):
         # Draws a solid directional line with a diamond for aggregation relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
-        if arrow_direction == tk.LAST:
-            self.drawDiamond(x2, y2)
-        else:
-            self.drawDiamond(x1, y1)
-        return line
+        shape = self.drawDiamond(x2, y2) if arrow_direction == tk.LAST else self.drawDiamond(x1, y1)
+        return line, shape
 
     def drawCompositionLine(self, x1, y1, x2, y2, arrow_direction):
         # Draws a solid directional line with a filled diamond for composition relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
-        if arrow_direction == tk.LAST:
-            self.drawFilledDiamond(x2, y2)
-        else:
-            self.drawFilledDiamond(x1, y1)
-        return line
+        shape = self.drawFilledDiamond(x2, y2) if arrow_direction == tk.LAST else self.drawFilledDiamond(x1, y1)
+        return line, shape
 
     def drawInheritanceLine(self, x1, y1, x2, y2, arrow_direction):
         # Draws a solid directional line with a triangle for inheritance relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
-        if arrow_direction == tk.LAST:
-            self.drawTriangle(x2, y2)
-        else:
-            self.drawTriangle(x1, y1)
-        return line
+        # Determine if the triangle needs to be flipped
+        flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
+        shape = self.drawTriangle(x2, y2, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, flip)
+        return line, shape
 
     def drawRealizationLine(self, x1, y1, x2, y2, arrow_direction):
         # Draws a dashed directional line with a triangle for realization relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, dash=(4, 2), arrow=arrow_direction)
-        if arrow_direction == tk.LAST:
-            self.drawTriangle(x2, y2)
-        else:
-            self.drawTriangle(x1, y1)
-        return line
+        # Determine if the triangle needs to be flipped
+        flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
+        shape = self.drawTriangle(x2, y2, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, flip)
+        return line, shape
 
     def drawDiamond(self, x2, y2):
         # Draws a diamond at the end of a line for aggregation.
         size = 10
-        self.canvas.create_polygon(
+        diamond = self.canvas.create_polygon(
             x2, y2 - size,  # Top
             x2 + size, y2,  # Right
             x2, y2 + size,  # Bottom
             x2 - size, y2,  # Left
             fill="white", outline="black"
         )
+        return diamond
 
     def drawFilledDiamond(self, x2, y2):
         # Draws a diamond at the end of a line for Composition.
         size = 10
-        self.canvas.create_polygon(
+        filled_diamond = self.canvas.create_polygon(
             x2, y2 - size,  # Top
             x2 + size, y2,  # Right
             x2, y2 + size,  # Bottom
             x2 - size, y2,  # Left
             fill="black", outline="black"
         )
+        return filled_diamond
 
-    def drawTriangle(self, x2, y2):
+    def drawTriangle(self, x2, y2, flip=False):
         # Draws a triangle at the end of a line for inheritance and realization.
         size = 10
-        self.canvas.create_polygon(
-            x2 - size, y2,          # Tip of the triangle (left point)
-            x2 + size, y2 - size,   # Top-right point
-            x2 + size, y2 + size,   # Bottom-right point
-            fill="white", outline="black"
-        )
+        if flip:
+            # Flipped triangle (left to right)
+            triangle = self.canvas.create_polygon(
+                x2 + size, y2,          # Tip of the triangle (right point)
+                x2 - size, y2 - size,   # Top-left point
+                x2 - size, y2 + size,   # Bottom-left point
+                fill="white", outline="black"
+            )
+        else:
+            # Normal triangle (right to left)
+            triangle = self.canvas.create_polygon(
+                x2 - size, y2,          # Tip of the triangle (left point)
+                x2 + size, y2 - size,   # Top-right point
+                x2 + size, y2 + size,   # Bottom-right point
+                fill="white", outline="black"
+            )
+        
+        return triangle
     
     def updateRelationshipLines(self, class_name):
-        # Update all lines connected to a specific class when the class box moves.
+        # Get the relationships associated with the class
         related_classes = self.controller.findRelationships(class_name)
 
-        # Update the lines for each related class
+        # Loop through the related classes
         for related_class, direction, relationship_type in related_classes:
+            # Convert the relationship type string back to Type before updating, if needed
+            if isinstance(relationship_type, str):
+                relationship_type = Type.make(relationship_type)
+                if not relationship_type:
+                    self.uiError(f"Invalid relationship type: {relationship_type}")
+                    continue
+
+            # Delete and redraw the visual lines for each relationship
             if (class_name, related_class) in self.relationship_lines:
-                self.canvas.delete(self.relationship_lines[(class_name, related_class)])
+                # Delete the existing visual line and shape
+                line, shape = self.relationship_lines[(class_name, related_class)]
+                self.canvas.delete(line)
+                self.canvas.delete(shape)
+
+                # Redraw the relationship line
                 self.drawRelationshipLine(class_name, related_class, relationship_type)
+
             elif (related_class, class_name) in self.relationship_lines:
-                self.canvas.delete(self.relationship_lines[(related_class, class_name)])
+                # Delete the existing visual line and shape for the inverse direction
+                line, shape = self.relationship_lines[(related_class, class_name)]
+                self.canvas.delete(line)
+                self.canvas.delete(shape)
+
+                # Redraw the relationship line
                 self.drawRelationshipLine(related_class, class_name, relationship_type)
 
     # ------------------- BOX VISUALS AND MOVEMENT FUNCTIONS START ----------------------------------------------------
@@ -471,11 +516,23 @@ class GUI(ui_interface.UI):
                 self.canvas.coords(text_attr, x + box_width / 2, text_y)
 
             # Continuously update the relationship lines as the box moves
-            self.updateRelationshipLines(class_name)
+            # self.updateRelationshipLines(class_name)
 
     def on_box_release(self, event):
         # Called when the user releases the mouse after dragging a box
-        self.selected_item = None
+        if self.selected_item:
+            class_name = None
+            # Find the class name associated with the selected item
+            for name, (box, _, _) in self.box_positions.items():
+                if box == self.selected_item:
+                    class_name = name
+                    break
+
+            # Update the relationship lines connected to the moved box
+            if class_name:
+                self.updateRelationshipLines(class_name)
+            
+            self.selected_item = None
 
     # -------------- DIAGNOSTIC FUNCTIONS START ----------------------------------------------------------------
 

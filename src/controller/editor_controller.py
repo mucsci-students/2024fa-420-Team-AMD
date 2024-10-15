@@ -45,11 +45,11 @@ class EditorController:
             del self.editor.classes[name]
             # Deleting relationships that are no longer valid after class deletion
             toRemove = []
-            for (src, dst) in self.editor.relationships:
-                if name == src or name == dst:
-                    toRemove.append((src, dst))
-            for (src, dst) in toRemove:
-                self.editor.relationships.discard((src, dst))
+            for relationship in self.editor.relationships:
+                if name == relationship.src or name == relationship.dst:
+                    toRemove.append(relationship)
+            for relationship in toRemove:
+                self.editor.relationships.remove(relationship)
             self.ui.uiFeedback(f'Deleted class {name}!')
             self.ui.deleteClassBox(name)
         else:
@@ -68,6 +68,12 @@ class EditorController:
 
     # Function which adds a relationship between class1 and class2, which are both strings
     def relationshipAdd(self, class1, class2, typ):
+        if isinstance(typ, str):
+            typ = Type.make(typ.lower())  # Convert string to Type enum if needed
+            if not typ:
+                self.ui.uiError(f"Invalid relationship type: {typ}")
+                return
+
         # We use tuples to make it simple to check for relationship existence in both orders
         if self.editor.hasRelationship(class1, class2) or self.editor.hasRelationship(class2, class1):
             self.ui.uiError(f'There is already a relationship between `{class1}` and `{class2}`')
@@ -76,9 +82,10 @@ class EditorController:
         elif class2 not in self.editor.classes:
             self.ui.uiError(f'class `{class2}` does not exist')
         else:
-            # Note the extra parenthesis as we are adding a tuple to the set
-            self.editor.relationships.add(Relationship(class1, class2, typ))
+            self.editor.relationships.add(Relationship(class1, class2, typ.name))
             self.ui.uiFeedback(f'Added relationship between {class1} and {class2} of type {typ.name}!')
+                
+            self.ui.drawRelationshipLine(class1, class2, typ.name.lower())  # Pass relationship type as string (lowercased)
 
     # Function which deletes a relationship between class1 and class2
     def relationshipDelete(self, class1, class2):
@@ -89,6 +96,8 @@ class EditorController:
                     toRemove = rel
             self.editor.relationships.remove(toRemove)
             self.ui.uiFeedback(f'Removed relationship between {class1} and {class2}!')
+
+            self.ui.deleteRelationshipLine(class1, class2)
         elif class1 not in self.editor.classes:
             self.ui.uiError(f'class `{class1}` does not exist')
         elif class2 not in self.editor.classes:
@@ -141,7 +150,10 @@ class EditorController:
     # Helper function for listClasses and listRelationships
     def findRelationships(self, class_name):
         related_classes = []
+        
         for relationship in self.editor.relationships:
+            if not isinstance(relationship.typ, Type):
+                print(f"Invalid type found in relationship: {relationship.typ}")
             if relationship.src == class_name:
                 related_classes.append((relationship.dst, 'outgoing', relationship.typ))
             elif relationship.dst == class_name:
