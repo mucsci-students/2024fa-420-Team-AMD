@@ -28,6 +28,10 @@ class GUI(ui_interface.UI):
         self.offset_x = 0
         self.offset_y = 0
 
+        self.relationship_lines = {}
+
+    # --------------------- USER PROMPTS CODE ------------------------------------------------------
+
     # prompt the user for any class buttons
     def classCommandPrompt(self, action):
         match action:
@@ -79,6 +83,36 @@ class GUI(ui_interface.UI):
 
             case _:
                 self.uiError("Invalid action.")
+    
+    # Prompt the user for relationship commands
+    def relationshipCommandPrompt(self, action):
+        match action:
+            case 'add':
+                class1 = self.uiQuery("First Class in Relationship: ")
+                class2 = self.uiQuery("Second Class in Relationship: ")
+                if class1 and class2:
+                    relationship_type = self.uiQuery("Enter the relationship type (aggregation, composition, inheritance, realization):")
+                    if relationship_type in ['aggregation', 'composition', 'inheritance', 'realization']:
+                        # Add the relationship in the model
+                        self.controller.relationshipAdd(class1, class2)
+                        # Draw the relationship line on the canvas based on the type
+                        self.drawRelationshipLine(class1, class2, relationship_type)
+                    else:
+                        self.uiError("Invalid relationship type. Valid types are: aggregation, composition, inheritance, realization.")
+
+            case 'delete':
+                class1 = self.uiQuery("First Class in Relationship to Delete: ")
+                class2 = self.uiQuery("Second Class in Relationship to Delete: ")
+                if class1 and class2:
+                    self.controller.relationshipDelete(class1, class2)
+
+            case _:
+                self.uiError("Invalid action.")
+    
+    # ------------------- END OF USER PROMPT FUNCTIONS ------------------------------------------------------------
+
+
+    # ------------------ CREATING INTERFACE TOOLBAR AND BUTTONS ---------------------------------------------------
 
     def create_toolbar(self):
         # Create a dropdown for 'Classes'
@@ -103,8 +137,8 @@ class GUI(ui_interface.UI):
         relationship_menu = tk.Menubutton(self.toolbar, text="Relationships", relief=tk.RAISED)
         relationship_menu.menu = tk.Menu(relationship_menu, tearoff=0)
         relationship_menu["menu"] = relationship_menu.menu
-        relationship_menu.menu.add_command(label="Add Relationship", command=lambda: print("Add Relationship clicked"))         ##command=self.relationshipCommands
-        relationship_menu.menu.add_command(label="Delete Relationship", command=lambda: print("Delete Relationship clicked"))
+        relationship_menu.menu.add_command(label="Add Relationship", command=lambda: self.relationshipCommandPrompt('add'))         ##command=self.relationshipCommands
+        relationship_menu.menu.add_command(label="Delete Relationship", command=lambda: self.relationshipCommandPrompt('delete'))
         relationship_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'List'
@@ -122,8 +156,8 @@ class GUI(ui_interface.UI):
         button_save = tk.Button(self.toolbar, text="Save", command=lambda: print("Save button clicked")) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Quit", command=self.root.destroy) 
-        button_save.pack(side=tk.LEFT, padx=2, pady=2)
+
+# -------------- CLASS VISUALS START ---------------------------------------------------------------------------------------
 
     # Creates a new box for a class. Leaves space for attributes
     def addClassBox(self, class_name, attributes=None):
@@ -178,17 +212,26 @@ class GUI(ui_interface.UI):
             self.next_x = 50
             self.next_y += box_height + 20
 
-    # Used in controller's deleteClass to visually delete class and it's attributes
     def deleteClassBox(self, class_name):
         if class_name in self.box_positions:
             box, text_class, text_attributes = self.box_positions[class_name]
-            
+
             # Delete the class box and all associated texts (class name + attributes)
             self.canvas.delete(box)  # Delete the box itself
             self.canvas.delete(text_class)  # Delete the class name text
             for text_attr in text_attributes:  # Delete all the attribute texts
                 self.canvas.delete(text_attr)
+
+            # Remove any relationship lines connected to this class
+            to_delete = []
+            for (class1, class2) in self.relationship_lines.keys():
+                if class1 == class_name or class2 == class_name:
+                    self.canvas.delete(self.relationship_lines[(class1, class2)])
+                    to_delete.append((class1, class2))
             
+            for key in to_delete:
+                del self.relationship_lines[key]
+
             # Remove the class from the dictionary
             del self.box_positions[class_name]
             self.uiFeedback(f'Class "{class_name}" deleted.')
@@ -227,6 +270,8 @@ class GUI(ui_interface.UI):
         else:
             self.uiError(f'Class "{name}" does not exist.')
 
+    # -------------------- ATTRIBUTE VISUALS START ---------------------------------------------------------------------------
+
     # Redraw the class box and attributes in the canvas after changes.
     def updateAttributesBox(self, class_name):
         if class_name in self.box_positions:
@@ -260,16 +305,150 @@ class GUI(ui_interface.UI):
         else:
             self.uiError(f'Class "{class_name}" does not exist.')
 
+    # -------------------- Relationship Visuals START ----------------------------------------------------
+    
+    def drawRelationshipLine(self, class1, class2, relationship_type):
+        # Draw a relationship line between two classes.
+        if class1 in self.box_positions and class2 in self.box_positions:
+            box1, _, _ = self.box_positions[class1]
+            box2, _, _ = self.box_positions[class2]
+
+            # Get the left and right centers of both boxes
+            x1_right, y1_right = self.getBoxRightCenter(box1)
+            x1_left, y1_left = self.getBoxLeftCenter(box1)
+            x2_right, y2_right = self.getBoxRightCenter(box2)
+            x2_left, y2_left = self.getBoxLeftCenter(box2)
+
+            # Decide whether to draw from right-to-left or left-to-right based on horizontal positions
+            if x1_right < x2_left:
+                # class1 is to the left of class2: draw from the right side of class1 to the left side of class2
+                x1, y1 = x1_right, y1_right
+                x2, y2 = x2_left, y2_left
+                arrow_direction = tk.LAST  # Arrow should point towards class2
+            else:
+                # class2 is to the left of class1: draw from the right side of class2 to the left side of class1
+                x1, y1 = x2_right, y2_right
+                x2, y2 = x1_left, y1_left
+                arrow_direction = tk.FIRST  # Arrow should point towards class1
+
+            # Draw the line based on the relationship type, and place the arrow/shape accordingly
+            if relationship_type == 'aggregation':
+                line = self.drawAggregationLine(x1, y1, x2, y2, arrow_direction)
+            elif relationship_type == 'composition':
+                line = self.drawCompositionLine(x1, y1, x2, y2, arrow_direction)
+            elif relationship_type == 'inheritance':
+                line = self.drawInheritanceLine(x1, y1, x2, y2, arrow_direction)
+            elif relationship_type == 'realization':
+                line = self.drawRealizationLine(x1, y1, x2, y2, arrow_direction)
+
+            # Store the line in the relationship_lines dictionary
+            self.relationship_lines[(class1, class2)] = line
+
+    def drawAggregationLine(self, x1, y1, x2, y2, arrow_direction):
+        # Draws a solid directional line with a diamond for aggregation relationship.
+        line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
+        if arrow_direction == tk.LAST:
+            self.drawDiamond(x2, y2)
+        else:
+            self.drawDiamond(x1, y1)
+        return line
+
+    def drawCompositionLine(self, x1, y1, x2, y2, arrow_direction):
+        # Draws a solid directional line with a filled diamond for composition relationship.
+        line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
+        if arrow_direction == tk.LAST:
+            self.drawFilledDiamond(x2, y2)
+        else:
+            self.drawFilledDiamond(x1, y1)
+        return line
+
+    def drawInheritanceLine(self, x1, y1, x2, y2, arrow_direction):
+        # Draws a solid directional line with a triangle for inheritance relationship.
+        line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
+        if arrow_direction == tk.LAST:
+            self.drawTriangle(x2, y2)
+        else:
+            self.drawTriangle(x1, y1)
+        return line
+
+    def drawRealizationLine(self, x1, y1, x2, y2, arrow_direction):
+        # Draws a dashed directional line with a triangle for realization relationship.
+        line = self.canvas.create_line(x1, y1, x2, y2, dash=(4, 2), arrow=arrow_direction)
+        if arrow_direction == tk.LAST:
+            self.drawTriangle(x2, y2)
+        else:
+            self.drawTriangle(x1, y1)
+        return line
+
+    def drawDiamond(self, x2, y2):
+        # Draws a diamond at the end of a line for aggregation.
+        size = 10
+        self.canvas.create_polygon(
+            x2, y2 - size,  # Top
+            x2 + size, y2,  # Right
+            x2, y2 + size,  # Bottom
+            x2 - size, y2,  # Left
+            fill="white", outline="black"
+        )
+
+    def drawFilledDiamond(self, x2, y2):
+        # Draws a diamond at the end of a line for Composition.
+        size = 10
+        self.canvas.create_polygon(
+            x2, y2 - size,  # Top
+            x2 + size, y2,  # Right
+            x2, y2 + size,  # Bottom
+            x2 - size, y2,  # Left
+            fill="black", outline="black"
+        )
+
+    def drawTriangle(self, x2, y2):
+        # Draws a triangle at the end of a line for inheritance and realization.
+        size = 10
+        self.canvas.create_polygon(
+            x2 - size, y2,          # Tip of the triangle (left point)
+            x2 + size, y2 - size,   # Top-right point
+            x2 + size, y2 + size,   # Bottom-right point
+            fill="white", outline="black"
+        )
+    
+    def updateRelationshipLines(self, class_name):
+        # Update all lines connected to a specific class when the class box moves.
+        related_classes = self.controller.findRelationships(class_name)
+
+        # Update the lines for each related class
+        for related_class, direction, relationship_type in related_classes:
+            if (class_name, related_class) in self.relationship_lines:
+                self.canvas.delete(self.relationship_lines[(class_name, related_class)])
+                self.drawRelationshipLine(class_name, related_class, relationship_type)
+            elif (related_class, class_name) in self.relationship_lines:
+                self.canvas.delete(self.relationship_lines[(related_class, class_name)])
+                self.drawRelationshipLine(related_class, class_name, relationship_type)
+
+    # ------------------- BOX VISUALS AND MOVEMENT FUNCTIONS START ----------------------------------------------------
+
+    def getBoxLeftCenter(self, box):
+        # Returns the left border center coordinates of a box.
+        coords = self.canvas.coords(box)
+        x_left = coords[0]  # The x-coordinate of the left border
+        y_center = (coords[1] + coords[3]) / 2  # The y-coordinate of the vertical center
+        return x_left, y_center
+    
+    def getBoxRightCenter(self, box):
+        # Returns the left border center coordinates of a box.
+        coords = self.canvas.coords(box)
+        x_left = coords[2]  # The x-coordinate of the left border
+        y_center = (coords[1] + coords[3]) / 2  # The y-coordinate of the vertical center
+        return x_left, y_center
 
     def on_box_click(self, event, item):
-        """ Called when the user clicks on a box. Store the selected item and the offset. """
+        # Called when the user clicks on a box. Store the selected item and the offset
         self.selected_item = item
-        # Calculate offset of the mouse from the box's origin
         self.offset_x = event.x - self.canvas.coords(item)[0]
         self.offset_y = event.y - self.canvas.coords(item)[1]
 
     def on_box_drag(self, event, class_name):
-        """ Called when the user drags a box. Update the position of the selected item and its text. """
+        # Called when the user drags a box. Update the position of the selected item and its text.
         if self.selected_item:
             x = event.x - self.offset_x
             y = event.y - self.offset_y
@@ -291,9 +470,14 @@ class GUI(ui_interface.UI):
                 text_y = y + 50 + i * 20  # Adjust the Y position for each attribute
                 self.canvas.coords(text_attr, x + box_width / 2, text_y)
 
+            # Continuously update the relationship lines as the box moves
+            self.updateRelationshipLines(class_name)
+
     def on_box_release(self, event):
-        """ Called when the user releases the mouse after dragging a box. """
+        # Called when the user releases the mouse after dragging a box
         self.selected_item = None
+
+    # -------------- DIAGNOSTIC FUNCTIONS START ----------------------------------------------------------------
 
     def uiFeedback(self, text: str):
         tk.messagebox.showinfo("Feedback", text)
