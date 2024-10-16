@@ -64,7 +64,9 @@ class EditorController:
     # Function to rename a class called 'name' to a class called 'rename'.
     def classRename(self, name, rename):
         if name in self.editor.classes and rename not in self.editor.classes:
-            self.editor.classes[rename] = self.editor.classes.pop(name)
+            clazz = self.editor.classes.pop(name)
+            clazz.name = rename
+            self.editor.classes[rename] = clazz
             self.ui.uiFeedback(f'Renamed class `{name}` to `{rename}`')
             self.ui.renameClassBox(name, rename)
         elif rename in self.editor.classes:
