@@ -178,6 +178,20 @@ class GUI(ui_interface.UI):
                 class2 = self.uiQuery("Second Class in Relationship to Delete: ")
                 if class1 and class2:
                     self.controller.relationshipDelete(class1, class2)
+            case 'edit':
+                class1 = self.uiQuery("First Class in Relationship: ")
+                class2 = self.uiQuery("Second Class in Relationship: ")
+
+                if class1 and class2:
+                    # Prompt for the relationship type
+                    relationship_type = self.uiQuery("Enter relationship type (aggregate, composition, inheritance, realization): ")
+
+                    # Validate the relationship type using Type.make
+                    relationship_type_enum = Type.make(relationship_type)
+                    if relationship_type_enum:
+                        self.controller.relationshipEdit(class1, class2, relationship_type_enum)
+                    else:
+                        self.uiError(f'Invalid relationship type: {relationship_type}')
             case _:
                 self.uiError("Invalid action.")
     
@@ -218,10 +232,10 @@ class GUI(ui_interface.UI):
         param_menu = tk.Menubutton(self.toolbar, text="Parameters", relief=tk.RAISED)
         param_menu.menu = tk.Menu(param_menu, tearoff=0)
         param_menu["menu"] = param_menu.menu
-        param_menu.menu.add_command(label="Remove Parameter", command=lambda: self.parametersCommandPrompt('remove'))
-        param_menu.menu.add_command(label="Clear Parameter", command=lambda: self.parametersCommandPrompt('clear'))
-        param_menu.menu.add_command(label="Rename Parameter", command=lambda: self.parametersCommandPrompt('rename'))
-        param_menu.menu.add_command(label="Change Parameter", command=lambda: self.parametersCommandPrompt('change'))
+        param_menu.menu.add_command(label="Remove Parameter", command=lambda: self.parameterCommandPrompt('remove'))
+        param_menu.menu.add_command(label="Clear Parameter", command=lambda: self.parameterCommandPrompt('clear'))
+        param_menu.menu.add_command(label="Rename Parameter", command=lambda: self.parameterCommandPrompt('rename'))
+        param_menu.menu.add_command(label="Change Parameter", command=lambda: self.parameterCommandPrompt('change'))
         param_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Relationships'
@@ -230,6 +244,7 @@ class GUI(ui_interface.UI):
         relationship_menu["menu"] = relationship_menu.menu
         relationship_menu.menu.add_command(label="Add Relationship", command=lambda: self.relationshipCommandPrompt('add'))         ##command=self.relationshipCommands
         relationship_menu.menu.add_command(label="Delete Relationship", command=lambda: self.relationshipCommandPrompt('delete'))
+        relationship_menu.menu.add_command(label="Edit Relationship", command=lambda: self.relationshipCommandPrompt('edit'))
         relationship_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         button_save = tk.Button(self.toolbar, text="Save", command=lambda: self.controller.save()) #command=self.relationshipCommands)
@@ -346,13 +361,13 @@ class GUI(ui_interface.UI):
     # Used in controller's renameClass to change class name
     def renameClassBox(self, name, rename):
         if name in self.box_positions:
-            box, text_class, text_attributes = self.box_positions[name]
+            box, text_class, text_attributes, text_methods = self.box_positions[name]
             
             # Update the class name text
             self.canvas.itemconfig(text_class, text=rename)
 
             # Update the dictionary with the new name (keeping the same box and attributes)
-            self.box_positions[rename] = (box, text_class, text_attributes)
+            self.box_positions[rename] = (box, text_class, text_attributes, text_methods)
             del self.box_positions[name]  # Remove the old entry
             
             # Reapply the event bindings to the new name

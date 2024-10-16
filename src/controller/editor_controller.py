@@ -125,6 +125,8 @@ class EditorController:
                     old_typ = rel.typ
                     rel.typ = new_typ
             self.ui.uiFeedback(f'Changed type of {class1} and {class2}\'s relationship from {old_typ.name} to {new_typ.name}')
+            self.ui.deleteRelationshipLine(class1, class2)
+            self.ui.drawRelationshipLine(class1, class2, new_typ.name.lower())  # Pass relationship type as string (lowercased)
         elif class1 not in self.editor.classes:
             self.ui.uiError(f'Class `{class1}` does not exist')
         elif class2 not in self.editor.classes:
