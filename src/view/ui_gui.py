@@ -96,7 +96,9 @@ class GUI(ui_interface.UI):
                     method_name = self.uiQuery("Method name:")
                     if method_name:
                         params = self.uiQuery("Input a list of parameters in order (comma separated):")
-                        param_list = params.split(",") if params else []
+                        # We use this lambda to strip all leading whitespace, which the user will most
+                        # definitely enter in anyway
+                        param_list = list(map(lambda s: s.strip(), params.split(","))) if params else []
                         self.controller.addMethod(class_name, method_name, param_list)
 
             case 'delete':
