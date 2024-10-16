@@ -32,11 +32,14 @@ class CLI(ui_interface.UI):
                 case 'list':
                     self.listCommands(controller)
                 case 'help':
-                    print('These are valid commands: class, relationship, field, method, parameter, save, load, list, exit.')
+                    print('These are valid commands: class, relationship, field, method, parameter, save, load, list, switch, exit.')
                     controller.editorHelp()
                 case 'exit':
                     quit = True
                     break
+                case 'switch':
+                        print('Switching to GUI...')
+                        return 'switch_to_gui'
                 case _:
                     print('error! print some help here')
 
@@ -240,6 +243,9 @@ class CLI(ui_interface.UI):
                     print('     classes: Lists all classes and their contents')
                     print('     class: Lists a specific class and its contents')
                     print('     relationships: Lists all relationships a class has with others')
+                    print()
+                case 'switch help':
+                    print('Switches to the GUI version of this program')
                     print()
                 case 'exit':
                     quit = True
