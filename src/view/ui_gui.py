@@ -462,11 +462,11 @@ class GUI(ui_interface.UI):
             if x1_right < x2_left:
                 # class1 is to the left of class2: draw from the right side of class1 to the left side of class2
                 x1, y1 = x1_right, y1_right
-                x2, y2 = x2_left, y2_left
+                x2, y2 = (x2_left - 10), y2_left
                 arrow_direction = tk.LAST  # Arrow should point towards class2
             else:
                 # class2 is to the left of class1: draw from the right side of class2 to the left side of class1
-                x1, y1 = x2_right, y2_right
+                x1, y1 = (x2_right + 10), y2_right
                 x2, y2 = x1_left, y1_left
                 arrow_direction = tk.FIRST  # Arrow should point towards class1
 
@@ -716,6 +716,8 @@ class GUI(ui_interface.UI):
                 self.canvas.coords(text_method, x + box_width / 2, text_y)
 
             # Continuously update the relationship lines as the box moves
+            if class_name:
+                self.updateRelationshipLines(class_name)
 
     def on_box_release(self, event):
         # Called when the user releases the mouse after dragging a box
