@@ -27,3 +27,12 @@ To run, use the python interpreter from the terminal.
 ```
 
 Use `help` command to get a list of valid commands and enter the help interface. Type `exit` to return to the editor. You can also use `exit` to exit from the editor itself.
+
+## Running Tests
+
+To run the tests for the editor, run the central test.py file in the `src` folder
+
+```console
+    $ cd 2024fa-420-Team-AMD
+    $ python src/test.py
+```
