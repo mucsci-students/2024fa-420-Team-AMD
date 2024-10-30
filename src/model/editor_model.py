@@ -7,8 +7,9 @@ class Editor:
         self.classes = {}
         self.relationships = set()
     
+    # Cannot use != as __eq__ can only be called on objects of the same type here
     def hasRelationship(self, src, dst):
-        return self.getRelationship(src, dst) != None
+        return self.getRelationship(src, dst) is not None
 
     # Helper method to get details about a relationship
     # between a source class and a destination class
