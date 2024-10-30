@@ -8,10 +8,15 @@ class Editor:
         self.relationships = set()
     
     def hasRelationship(self, src, dst):
+        return self.getRelationship(src, dst) != None
+
+    # Helper method to get details about a relationship
+    # between a source class and a destination class
+    def getRelationship(self, src, dst):
         for rel in self.relationships:
             if rel.src == src and rel.dst == dst:
-                return True
-        return False
+                return rel
+        return None
 
 class EditorEncoder(json.JSONEncoder):
     def default(self, obj):
