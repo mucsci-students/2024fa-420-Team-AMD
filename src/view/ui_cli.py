@@ -30,10 +30,14 @@ class CLI(ui_interface.UI):
                     controller.save()
                 case 'load':
                     controller.load()
+                case 'undo':
+                    controller.stepCmd(True)
+                case 'redo':
+                    controller.stepCmd(False)
                 case 'list':
                     self.listCommands(controller)
                 case 'help':
-                    print('These are valid commands: class, relationship, field, method, parameter, save, load, list, switch, exit.')
+                    print('These are valid commands: class, relationship, field, method, parameter, save, load, undo, redo, list, switch, exit.')
                     controller.editorHelp()
                 case 'exit':
                     quit = True
@@ -271,6 +275,12 @@ class CLI(ui_interface.UI):
                     print()
                 case 'load help':
                     print('Loads from a JSON format')
+                    print()
+                case 'undo help':
+                    print('Reverts the latest change in the workspace')
+                    print()
+                case 'redo help':
+                    print('Reapplies reverted changes in the workspace')
                     print()
                 case 'list help':
                     print('Valid subcommands:')

@@ -292,6 +292,9 @@ class GUI(ui_interface.UI):
         button_undo = tk.Button(self.toolbar, text="Undo", command=lambda: self.controller.stepCmd(True))
         button_undo.pack(side=tk.LEFT, padx=2, pady=2)
 
+        button_undo = tk.Button(self.toolbar, text="Redo", command=lambda: self.controller.stepCmd(False))
+        button_undo.pack(side=tk.LEFT, padx=2, pady=2)
+
 
 # -------------- CLASS VISUALS START ---------------------------------------------------------------------------------------
 

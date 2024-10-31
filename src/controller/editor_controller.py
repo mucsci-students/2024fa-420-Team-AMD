@@ -45,14 +45,18 @@ class EditorController:
     # Function for Undo/Redo
     # Steps through the command stack in different directions depending on the command
     def stepCmd(self, undo: bool):
+        if len(self.editor.action_stack) == 0:
+            self.ui.uiError('No actions have been performed yet')
+            return
         if undo:
             self.editor.action_stack[self.editor.action_idx].undo(self)
             if self.editor.action_idx > 0:
                 self.editor.action_idx -= 1
         else:
-            self.editor.action_stack[self.editor.action_idx].execute(self)
+            self.editor.action_idx += 1
             if self.editor.action_idx >= len(self.editor.action_stack):
                 self.editor.action_idx = len(self.editor.action_stack) - 1
+            self.editor.action_stack[self.editor.action_idx].execute(self)
 
     def classAdd(self, name) -> bool:
         if name in self.editor.classes:
