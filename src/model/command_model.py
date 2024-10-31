@@ -6,7 +6,7 @@ from model.class_model import Method
 # Commands CAN fail, since their respective controller functions
 # can fail also. Failed commands will not be added to the action stack.
 class Command:
-    def apply(self, controller) -> bool:
+    def execute(self, controller) -> bool:
         pass
 
     def undo(self, controller) -> bool:
@@ -16,7 +16,7 @@ class CommandClassAdd(Command):
     def __init__(self, name):
         self.name = name
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.classAdd(self.name)
 
     def undo(self):
@@ -26,7 +26,7 @@ class CommandClassDelete(Command):
     def __init__(self, name):
         self.name = name
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.classDelete(self.name)
 
     def undo(self, controller):
@@ -37,7 +37,7 @@ class CommandClassRename(Command):
         self.name = name
         self.rename = rename
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.classRename(self.name, self.rename)
 
     def undo(self, controller):
@@ -49,7 +49,7 @@ class CommandRelationshipAdd(Command):
         self.class2 = class2
         self.typ = typ
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.relationshipAdd(self.class1, self.class2, self.typ)
 
     def undo(self, controller):
@@ -61,7 +61,7 @@ class CommandRelationshipDelete(Command):
         self.class2 = class2
         self.typ = None
 
-    def apply(self, controller):
+    def execute(self, controller):
         # Saving the type for undo
         # Controller can fail if this relationship is non-existant
         if controller.editor.hasRelationship(self.class1, self.class2):
@@ -78,7 +78,7 @@ class CommandRelationshipEdit(Command):
         self.new_typ = new_typ
         self.old_typ = None
 
-    def apply(self, controller):
+    def execute(self, controller):
         # Saving the old type for undo
         # Controller can fail if this relationship is non-existant
         if controller.editor.hasRelationship(self.class1, self.class2):
@@ -93,7 +93,7 @@ class CommandFieldAdd(Command):
         self.class1 = class1
         self.field1 = field1
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.addField(self.class1, self.field1)
 
     def undo(self, controller):
@@ -104,7 +104,7 @@ class CommandFieldDelete(Command):
         self.class1 = class1
         self.field1 = field1
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.deleteField(self.class1, self.field1)
 
     def undo(self, controller):
@@ -116,7 +116,7 @@ class CommandFieldRename(Command):
         self.field1 = field1
         self.field2 = field2
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.renameField(self.class1, self.field1, self.field2)
 
     def undo(self, controller):
@@ -128,7 +128,7 @@ class CommandMethodAdd(Command):
         self.method = method
         self.params = params
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.addMethod(self.class1, self.method, self.params)
 
     def undo(self, controller):
@@ -140,7 +140,7 @@ class CommandMethodDelete(Command):
         self.method = method
         self.params = []
 
-    def apply(self, controller):
+    def execute(self, controller):
         # Saving the parameters for undo
         try:
             if self.class1 in controller.editor.classes:
@@ -160,7 +160,7 @@ class CommandMethodRename(Command):
         self.method1 = method1
         self.method2 = method2
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.renameMethod(self.class1, self.method1, self.method2)
 
     def undo(self, controller):
@@ -173,7 +173,7 @@ class CommandParameterRemove(Command):
         self.param = param
         self.old_params = []
 
-    def apply(self, controller):
+    def execute(self, controller):
         # Saving the parameters for undo
         try:
             if self.class1 in controller.editor.classes:
@@ -193,7 +193,7 @@ class CommandParameterClear(Command):
         self.method = method
         self.old_params = []
 
-    def apply(self, controller):
+    def execute(self, controller):
         # Saving the parameters for undo
         try:
             if self.class1 in controller.editor.classes:
@@ -214,7 +214,7 @@ class CommandParameterRename(Command):
         self.param1 = param1
         self.param2 = param2
 
-    def apply(self, controller):
+    def execute(self, controller):
         return controller.renameParameter(self.class1, self.method, self.param1, self.param2)
 
     def undo(self, controller):
@@ -227,7 +227,7 @@ class CommandParameterChange(Command):
         self.params = params
         self.old_params = []
 
-    def apply(self, controller):
+    def execute(self, controller):
         # Saving the parameters for undo
         try:
             if self.class1 in controller.editor.classes:

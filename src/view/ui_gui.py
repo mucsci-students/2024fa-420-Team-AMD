@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, filedialog
 from model.relationship_model import Type
 from model.class_model import Field, Method
+from model.command_model import *
 import json
 
 class GUI(ui_interface.UI):
@@ -41,19 +42,25 @@ class GUI(ui_interface.UI):
             case 'add':
                 class_name = self.uiQuery("Class Name to Add:")
                 if class_name:
-                    self.controller.classAdd(class_name)
+                    cmd = CommandClassAdd(class_name)
+                    cmd.execute(self.controller)
+                    self.controller.editor.pushCmd(cmd)
 
             case 'delete':
                 class_name = self.uiQuery("Class to Delete:")
                 if class_name:
-                    self.controller.classDelete(class_name)
+                    cmd = CommandClassDelete(class_name)
+                    cmd.execute(self.controller)
+                    self.controller.editor.pushCmd(cmd)
 
             case 'rename':
                 old_name = self.uiQuery("Class to change:")
                 if old_name:
                     new_name = self.uiQuery("New name:")
                     if new_name:
-                        self.controller.classRename(old_name, new_name)
+                        cmd = CommandClassRename(old_name, new_name)
+                        cmd.execute(self.controller)
+                        self.controller.editor.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")
@@ -66,14 +73,18 @@ class GUI(ui_interface.UI):
                 if class_name:
                     field_name = self.uiQuery("Field name:")
                     if field_name:
-                        self.controller.addField(class_name, field_name)
+                        cmd = CommandFieldAdd(class_name, field_name)
+                        cmd.execute(self.controller)
+                        self.controller.editor.pushCmd(cmd)
 
             case 'delete':
                 class_name = self.uiQuery("Class to delete field from:")
                 if class_name:
                     field_name = self.uiQuery("Field to delete:")
                     if field_name:
-                        self.controller.deleteField(class_name, field_name)
+                        cmd = CommandFieldDelete(class_name, field_name)
+                        cmd.execute(self.controller)
+                        self.controller.editor.pushCmd(cmd)
 
             case 'rename':
                 class_name = self.uiQuery("Class who's field you would like to rename:")
@@ -82,7 +93,9 @@ class GUI(ui_interface.UI):
                     if old_field_name:
                         new_field_name = self.uiQuery("Field name you would like to change to:")
                         if new_field_name:
-                            self.controller.renameField(class_name, old_field_name, new_field_name)
+                            cmd = CommandFieldRename(class_name, old_field_name, new_field_name)
+                            cmd.execute(self.controller)
+                            self.controller.editor.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")
@@ -99,14 +112,18 @@ class GUI(ui_interface.UI):
                         # We use this lambda to strip all leading whitespace, which the user will most
                         # definitely enter in anyway
                         param_list = list(map(lambda s: s.strip(), params.split(","))) if params else []
-                        self.controller.addMethod(class_name, method_name, param_list)
+                        cmd = CommandMethodAdd(class_name, method_name, param_list)
+                        cmd.execute(self.controller)
+                        self.controller.editor.pushCmd(cmd)
 
             case 'delete':
                 class_name = self.uiQuery("Class to Delete method from:")
                 if class_name:
                     method_name = self.uiQuery("Method to delete:")
                     if method_name:
-                        self.controller.deleteMethod(class_name, method_name)
+                        cmd = CommandMethodDelete(class_name, method_name)
+                        cmd.execute(self.controller)
+                        self.controller.editor.pushCmd(cmd)
 
             case 'rename':
                 class_name = self.uiQuery("Class who's method you would like to rename:")
@@ -115,7 +132,9 @@ class GUI(ui_interface.UI):
                     if old_method_name:
                         new_method_name = self.uiQuery("Method name you would like to change to:")
                         if new_method_name:
-                            self.controller.renameMethod(class_name, old_method_name, new_method_name)
+                            cmd = CommandMethodRename(class_name, old_method_name, new_method_name)
+                            cmd.execute(self.controller)
+                            self.controller.editor.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")         
@@ -129,13 +148,17 @@ class GUI(ui_interface.UI):
                 if class_name and method_name:
                     param_name = self.uiQuery("Parameter to remove:")
                     if param_name:
-                        self.controller.removeParameter(class_name, method_name, param_name)
+                        cmd = CommandParameterRemove(class_name, method_name, param_name)
+                        cmd.execute(self.controller)
+                        self.controller.editor.pushCmd(cmd)
 
             case 'clear':
                 class_name = self.uiQuery("Class with the desired method:")
                 method_name = self.uiQuery("Method to clear parameters from:")
                 if class_name and method_name:
-                    self.controller.clearParameters(class_name, method_name)
+                    cmd = CommandParameterClear(class_name, method_name)
+                    cmd.execute(self.controller)
+                    self.controller.editor.pushCmd(cmd)
 
             case 'rename':
                 class_name = self.uiQuery("Class with the desired method:")
@@ -144,14 +167,18 @@ class GUI(ui_interface.UI):
                     old_param_name = self.uiQuery("Parameter to rename:")
                     new_param_name = self.uiQuery("New parameter name:")
                     if old_param_name and new_param_name:
-                        self.controller.renameParameter(class_name, method_name, old_param_name, new_param_name)
+                        cmd = CommandParameterRename(class_name, method_name, old_param_name, new_param_name)
+                        cmd.execute(self.controller)
+                        self.controller.editor.pushCmd(cmd)
 
             case 'change':
                 class_name = self.uiQuery("Class with the desired method:")
                 method_name = self.uiQuery("Method with parameters to change:")
                 if class_name and method_name:
                     param_list = self.uiQuery("Input a list of parameters in order (comma-separated):").split(",")
-                    self.controller.replaceParameters(class_name, method_name, [param.strip() for param in param_list])
+                    cmd = CommandParameterChange(class_name, method_name, [param.strip() for param in param_list])
+                    cmd.execute(self.controller)
+                    self.controller.editor.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")        
@@ -170,14 +197,18 @@ class GUI(ui_interface.UI):
                     # Validate the relationship type using Type.make
                     relationship_type_enum = Type.make(relationship_type)
                     if relationship_type_enum:
-                        self.controller.relationshipAdd(class1, class2, relationship_type_enum)
+                        cmd = CommandRelationshipAdd(class1, class2, relationship_type_enum)
+                        cmd.execute(self.controller)
+                        self.controller.editor.pushCmd(cmd)
                     else:
                         self.uiError(f'Invalid relationship type: {relationship_type}')
             case 'delete':
                 class1 = self.uiQuery("First Class in Relationship to Delete: ")
                 class2 = self.uiQuery("Second Class in Relationship to Delete: ")
                 if class1 and class2:
-                    self.controller.relationshipDelete(class1, class2)
+                    cmd = CommandRelationshipDelete(class1, class2)
+                    cmd.execute(self.controller)
+                    self.controller.editor.pushCmd(cmd)
             case 'edit':
                 class1 = self.uiQuery("First Class in Relationship: ")
                 class2 = self.uiQuery("Second Class in Relationship: ")
@@ -189,7 +220,9 @@ class GUI(ui_interface.UI):
                     # Validate the relationship type using Type.make
                     relationship_type_enum = Type.make(relationship_type)
                     if relationship_type_enum:
-                        self.controller.relationshipEdit(class1, class2, relationship_type_enum)
+                        cmd = CommandRelationshipEdit(class1, class2, relationship_type_enum)
+                        cmd.execute(self.controller)
+                        self.controller.editor.pushCmd(cmd)
                     else:
                         self.uiError(f'Invalid relationship type: {relationship_type}')
             case _:
