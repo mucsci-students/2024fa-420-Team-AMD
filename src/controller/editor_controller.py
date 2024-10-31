@@ -42,6 +42,18 @@ class EditorController:
                         
         self.ui.uiFeedback(f'=--> Loaded from {filename}!')
 
+    # Function for Undo/Redo
+    # Steps through the command stack in different directions depending on the command
+    def stepCmd(self, undo: bool):
+        if undo:
+            self.editor.action_stack[self.editor.action_idx].undo(self)
+            if self.editor.action_idx > 0:
+                self.editor.action_idx -= 1
+        else:
+            self.editor.action_stack[self.editor.action_idx].execute(self)
+            if self.editor.action_idx >= len(self.editor.action_stack):
+                self.editor.action_idx = len(self.editor.action_stack) - 1
+
     def classAdd(self, name) -> bool:
         if name in self.editor.classes:
             self.ui.uiError(f'Class {name} already exists')

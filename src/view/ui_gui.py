@@ -289,7 +289,7 @@ class GUI(ui_interface.UI):
         button_save = tk.Button(self.toolbar, text="Help", command=lambda: self.showHelp()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_undo = tk.Button(self.toolbar, text="Undo", command=lambda: self.uiFeedback('TODO: undo'))
+        button_undo = tk.Button(self.toolbar, text="Undo", command=lambda: self.controller.stepCmd(True))
         button_undo.pack(side=tk.LEFT, padx=2, pady=2)
 
 

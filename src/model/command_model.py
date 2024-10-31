@@ -19,7 +19,7 @@ class CommandClassAdd(Command):
     def execute(self, controller):
         return controller.classAdd(self.name)
 
-    def undo(self):
+    def undo(self, controller):
         return controller.classDelete(self.name)
 
 class CommandClassDelete(Command):
@@ -146,7 +146,7 @@ class CommandMethodDelete(Command):
             if self.class1 in controller.editor.classes:
                 item = controller.editor.classes[self.class1]
             method = next(m for m in item.methods if m.name == self.method)
-            self.params = method.params
+            self.params = method.params.copy()
         except:
             return False
         return controller.deleteMethod(self.class1, self.method)
@@ -179,7 +179,7 @@ class CommandParameterRemove(Command):
             if self.class1 in controller.editor.classes:
                 item = controller.editor.classes[self.class1]
             method = next(m for m in item.methods if m.name == self.method)
-            self.old_params = method.params
+            self.old_params = method.params.copy()
         except:
             return False
         return controller.removeParameter(self.class1, self.method, self.param)
@@ -199,7 +199,7 @@ class CommandParameterClear(Command):
             if self.class1 in controller.editor.classes:
                 item = controller.editor.classes[self.class1]
             method = next(m for m in item.methods if m.name == self.method)
-            self.old_params = method.params
+            self.old_params = method.params.copy()
         except:
             return False
         return controller.clearParameters(self.class1, self.method)
@@ -233,7 +233,7 @@ class CommandParameterChange(Command):
             if self.class1 in controller.editor.classes:
                 item = controller.editor.classes[self.class1]
             method = next(m for m in item.methods if m.name == self.method)
-            self.old_params = method.params
+            self.old_params = method.params.copy()
         except:
             return False
         return controller.replaceParameters(self.class1, self.method, self.params)

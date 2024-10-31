@@ -7,6 +7,7 @@ class Editor:
         self.classes = {}
         self.relationships = set()
         self.action_stack = []
+        self.action_idx = 0
     
     # Cannot use != as __eq__ can only be called on objects of the same type here
     def hasRelationship(self, src, dst):
@@ -22,6 +23,7 @@ class Editor:
     
     def pushCmd(self, cmd):
         self.action_stack.append(cmd)
+        self.action_idx = len(self.action_stack) - 1
 
     def popCmd(self):
         return self.action_stack.pop()
