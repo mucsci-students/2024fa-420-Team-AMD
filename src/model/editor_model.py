@@ -6,12 +6,27 @@ class Editor:
     def __init__(self):
         self.classes = {}
         self.relationships = set()
+        self.action_stack = []
+        self.action_idx = 0
     
+    # Cannot use != as __eq__ can only be called on objects of the same type here
     def hasRelationship(self, src, dst):
+        return self.getRelationship(src, dst) is not None
+
+    # Helper method to get details about a relationship
+    # between a source class and a destination class
+    def getRelationship(self, src, dst):
         for rel in self.relationships:
             if rel.src == src and rel.dst == dst:
-                return True
-        return False
+                return rel
+        return None
+    
+    def pushCmd(self, cmd):
+        self.action_stack.append(cmd)
+        self.action_idx = len(self.action_stack) - 1
+
+    def popCmd(self):
+        return self.action_stack.pop()
 
 class EditorEncoder(json.JSONEncoder):
     def default(self, obj):
