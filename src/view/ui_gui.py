@@ -4,6 +4,7 @@ from tkinter import messagebox, simpledialog, filedialog
 from model.relationship_model import Type
 from model.class_model import Field, Method
 import json
+import math
 
 class GUI(ui_interface.UI):
     def __init__(self, controller):
@@ -470,22 +471,35 @@ class GUI(ui_interface.UI):
                 x2, y2 = x1_left, y1_left
                 arrow_direction = tk.FIRST  # Arrow should point towards class1
 
-            # Initialize shape variable to None
-            line, shape = None, None
+            angle = self.compute_angle(x1, y1, x2, y2)
+            extension = 10  # Extend the line into the shape
 
-            # Call the appropriate function based on the relationship type
-            if relationship_type == Type.Aggregate:
-                line, shape = self.drawAggregationLine(x1, y1, x2, y2, arrow_direction)
-            elif relationship_type == Type.Composition:
-                line, shape = self.drawCompositionLine(x1, y1, x2, y2, arrow_direction)
-            elif relationship_type == Type.Inheritance:
-                line, shape = self.drawInheritanceLine(x1, y1, x2, y2, arrow_direction)
-            elif relationship_type == Type.Realization:
-                line, shape = self.drawRealizationLine(x1, y1, x2, y2, arrow_direction)
+            # Extend the endpoint of the line to go into the shape
+            x2_extended = x2 + extension * math.cos(angle)
+            y2_extended = y2 + extension * math.sin(angle)
+
+            # Draw the line with the appropriate style
+            if relationship_type == Type.Realization:
+                # Dotted line for realization
+                line = self.canvas.create_line(x1, y1, x2_extended, y2_extended, dash=(4, 2), arrow=arrow_direction)
             else:
-                # If an invalid relationship_type is provided, raise an error
+                # Solid line for other types
+                line = self.canvas.create_line(x1, y1, x2_extended, y2_extended, arrow=arrow_direction)
+
+            # Draw the shape at the actual endpoint
+            if relationship_type == Type.Aggregate:
+                shape = self.drawDiamond(x2, y2, angle) if arrow_direction == tk.LAST else self.drawDiamond(x1, y1, angle)
+            elif relationship_type == Type.Composition:
+                shape = self.drawFilledDiamond(x2, y2, angle) if arrow_direction == tk.LAST else self.drawFilledDiamond(x1, y1, angle)
+            elif relationship_type == Type.Inheritance:
+                flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
+                shape = self.drawTriangle(x2, y2, angle, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, angle, flip)
+            elif relationship_type == Type.Realization:
+                flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
+                shape = self.drawTriangle(x2, y2, angle, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, angle, flip)
+            else:
                 self.uiError(f"Invalid relationship type: {relationship_type}")
-                return  # Exit early if an invalid type is encountered
+                return
 
             self.relationship_lines[(class1, class2)] = (line, shape)
 
@@ -502,75 +516,87 @@ class GUI(ui_interface.UI):
             self.canvas.delete(shape)
             del self.relationship_lines[(class2, class1)]
 
-    def drawAggregationLine(self, x1, y1, x2, y2, arrow_direction):
+    def drawAggregationLine(self, x1, y1, x2, y2, arrow_direction, angle):
         # Draws a solid directional line with a diamond for aggregation relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
-        shape = self.drawDiamond(x2, y2) if arrow_direction == tk.LAST else self.drawDiamond(x1, y1)
+        shape = self.drawDiamond(x2, y2, angle) if arrow_direction == tk.LAST else self.drawDiamond(x1, y1, angle)
         return line, shape
 
-    def drawCompositionLine(self, x1, y1, x2, y2, arrow_direction):
+    def drawCompositionLine(self, x1, y1, x2, y2, arrow_direction, angle):
         # Draws a solid directional line with a filled diamond for composition relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
-        shape = self.drawFilledDiamond(x2, y2) if arrow_direction == tk.LAST else self.drawFilledDiamond(x1, y1)
+        shape = self.drawFilledDiamond(x2, y2, angle) if arrow_direction == tk.LAST else self.drawFilledDiamond(x1, y1, angle)
         return line, shape
 
-    def drawInheritanceLine(self, x1, y1, x2, y2, arrow_direction):
+    def drawInheritanceLine(self, x1, y1, x2, y2, arrow_direction, angle):
         # Draws a solid directional line with a triangle for inheritance relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
         # Determine if the triangle needs to be flipped
         flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
-        shape = self.drawTriangle(x2, y2, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, flip)
+        shape = self.drawTriangle(x2, y2, angle, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, angle, flip)
         return line, shape
 
-    def drawRealizationLine(self, x1, y1, x2, y2, arrow_direction):
+    def drawRealizationLine(self, x1, y1, x2, y2, arrow_direction, angle):
         # Draws a dashed directional line with a triangle for realization relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, dash=(4, 2), arrow=arrow_direction)
         # Determine if the triangle needs to be flipped
         flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
-        shape = self.drawTriangle(x2, y2, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, flip)
+        shape = self.drawTriangle(x2, y2, angle, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, angle, flip)
         return line, shape
 
-    def drawDiamond(self, x2, y2):
+    def compute_angle(self, x1, y1, x2, y2):
+        return math.atan2(y2 - y1, x2 - x1)
+
+    def drawDiamond(self, x2, y2, angle):
         # Draws a diamond at the end of a line for aggregation.
-        size = 10
+        size = 17
+        half_size = size / 2
+
+        # Calculate the corners of the diamond based on fixed offsets
         diamond = self.canvas.create_polygon(
-            x2, y2 - size,  # Top
-            x2 + size, y2,  # Right
-            x2, y2 + size,  # Bottom
-            x2 - size, y2,  # Left
+            x2 + half_size * math.cos(angle), y2 + half_size * math.sin(angle),         # Right point
+            x2 - half_size * math.sin(angle), y2 + half_size * math.cos(angle),         # Top point
+            x2 - half_size * math.cos(angle), y2 - half_size * math.sin(angle),         # Left point
+            x2 + half_size * math.sin(angle), y2 - half_size * math.cos(angle),         # Bottom point
             fill="white", outline="black"
         )
+
         return diamond
 
-    def drawFilledDiamond(self, x2, y2):
-        # Draws a diamond at the end of a line for Composition.
-        size = 10
+    def drawFilledDiamond(self, x2, y2, angle):
+        # Draws a diamond at the end of a line for composition.
+        size = 17
+        half_size = size / 2
+
+        # Calculate the corners of the diamond based on fixed offsets
         filled_diamond = self.canvas.create_polygon(
-            x2, y2 - size,  # Top
-            x2 + size, y2,  # Right
-            x2, y2 + size,  # Bottom
-            x2 - size, y2,  # Left
+            x2 + half_size * math.cos(angle), y2 + half_size * math.sin(angle),         # Right point
+            x2 - half_size * math.sin(angle), y2 + half_size * math.cos(angle),         # Top point
+            x2 - half_size * math.cos(angle), y2 - half_size * math.sin(angle),         # Left point
+            x2 + half_size * math.sin(angle), y2 - half_size * math.cos(angle),         # Bottom point
             fill="black", outline="black"
         )
+
         return filled_diamond
 
-    def drawTriangle(self, x2, y2, flip=False):
+    def drawTriangle(self, x2, y2, angle, flip=False):
         # Draws a triangle at the end of a line for inheritance and realization.
         size = 10
-        if flip:
-            # Flipped triangle (left to right)
+        dx, dy = size * math.cos(angle), size * math.sin(angle)
+        if not flip:
+            # Triangle pointing in the opposite direction
             triangle = self.canvas.create_polygon(
-                x2 + size, y2,          # Tip of the triangle (right point)
-                x2 - size, y2 - size,   # Top-left point
-                x2 - size, y2 + size,   # Bottom-left point
+                x2 - dx, y2 - dy,         # Tip of the triangle (flipped direction)
+                x2 + dy, y2 - dx,         # Base left
+                x2 - dy, y2 + dx,         # Base right
                 fill="white", outline="black"
             )
         else:
-            # Normal triangle (right to left)
+            # Triangle pointing in the direction of the line
             triangle = self.canvas.create_polygon(
-                x2 - size, y2,          # Tip of the triangle (left point)
-                x2 + size, y2 - size,   # Top-right point
-                x2 + size, y2 + size,   # Bottom-right point
+                x2 + dx, y2 + dy,         # Tip of the triangle
+                x2 - dy, y2 + dx,         # Base left
+                x2 + dy, y2 - dx,         # Base right
                 fill="white", outline="black"
             )
         
