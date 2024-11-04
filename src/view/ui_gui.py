@@ -802,6 +802,14 @@ class GUI(ui_interface.UI):
 
     # -------------- DIAGNOSTIC FUNCTIONS START ----------------------------------------------------------------
 
+    def uiChooseSaveLocation(self) -> str:
+        filename = tk.filedialog.asksaveasfilename(title="Select a File", filetypes=[("JSON files", "*.JSON")])
+        return filename
+
+    def uiChooseLoadLocation(self) -> str:
+        filename = tk.filedialog.askopenfilename(title="Select a File", filetypes=[("JSON files", "*.JSON")])
+        return filename
+
     def uiFeedback(self, text: str):
         tk.messagebox.showinfo("Feedback", text)
 

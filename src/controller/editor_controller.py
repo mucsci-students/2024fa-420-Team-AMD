@@ -2,6 +2,7 @@ import json
 from model.class_model import Class, Field, Method
 from model.editor_model import EditorEncoder
 from model.relationship_model import Relationship, Type
+from view.ui_cli import CLI
 
 # Controller for the Editor class
 # Most functions return a boolean to indicate that an action
@@ -15,15 +16,27 @@ class EditorController:
         self.editor = editor
     
     def save(self):
-        filename = self.ui.uiQuery('Save As (.JSON): ')
+        filename = self.ui.uiChooseSaveLocation()
+        # For an empty filename (sent on GUI 'Cancel') do nothing
+        if not filename:
+            # If it's the CLI, give clear output
+            if isinstance(self.ui, CLI):
+                self.ui.uiError(f'Could not save to `{filename}`')
+            return
 
         output = json.dumps(self.editor, cls=EditorEncoder, indent=4)
-        with open(f'{filename}.JSON', 'w') as f:
+        with open(f'{filename}', 'w') as f:
             f.write(output)
-            self.ui.uiFeedback(f'Saved to {filename}.JSON!')
+            self.ui.uiFeedback(f'Saved to {filename}!')
     
     def load(self):
-        filename = self.ui.uiQuery('File Name to Open: ')
+        filename = self.ui.uiChooseLoadLocation()
+        # For an empty filename (sent on GUI 'Cancel') do nothing
+        if not filename:
+            # If it's the CLI, give clear output
+            if isinstance(self.ui, CLI):
+                self.ui.uiError(f'Could not load from `{filename}`')
+            return
 
         with open(filename, 'r') as f:
             data = f.read()
