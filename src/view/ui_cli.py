@@ -8,6 +8,14 @@ class CLI(ui_interface.UI):
 
     def uiError(self, text: str):
         print(f'ERROR: {text}')
+
+    def uiChooseSaveLocation(self) -> str:
+        filename = self.uiQuery('Save As (Saves to JSON format): ')
+        return filename
+
+    def uiChooseLoadLocation(self) -> str:
+        filename = self.uiQuery('File Name to Open: ')
+        return filename
         
     def uiRun(self, controller):
         print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
