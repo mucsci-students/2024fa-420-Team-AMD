@@ -3,6 +3,7 @@ from model.class_model import Class, Field, Method
 from model.editor_model import EditorEncoder
 from model.relationship_model import Relationship, Type
 from view.ui_cli import CLI
+from view.ui_gui import GUI
 
 # Controller for the Editor class
 # Most functions return a boolean to indicate that an action
@@ -38,6 +39,9 @@ class EditorController:
                 self.ui.uiError(f'Could not load from `{filename}`')
             return
 
+        if isinstance(self.ui, GUI):
+            self.ui.silent_mode = True
+
         with open(filename, 'r') as f:
             data = f.read()
             obj = json.loads(data)
@@ -54,6 +58,8 @@ class EditorController:
                 self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
                         
         self.ui.uiFeedback(f'=--> Loaded from {filename}!')
+        if isinstance(self.ui, GUI):
+            self.ui.silent_mode = False
 
     # Function for Undo/Redo
     # Steps through the command stack in different directions depending on the command
