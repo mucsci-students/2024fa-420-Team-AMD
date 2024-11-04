@@ -57,6 +57,11 @@ class EditorController:
             if self.editor.action_idx >= len(self.editor.action_stack):
                 self.editor.action_idx = len(self.editor.action_stack) - 1
             self.editor.action_stack[self.editor.action_idx].execute(self)
+    
+    def pushCmd(self, cmd):
+        self.editor.pushCmd(cmd)
+        # Recalculate grayed out buttons
+        self.ui.updateAccess()
 
     def classAdd(self, name) -> bool:
         if name in self.editor.classes:
