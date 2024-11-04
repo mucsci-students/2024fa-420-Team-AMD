@@ -45,14 +45,14 @@ class GUI(ui_interface.UI):
                 if class_name:
                     cmd = CommandClassAdd(class_name)
                     cmd.execute(self.controller)
-                    self.controller.editor.pushCmd(cmd)
+                    self.controller.pushCmd(cmd)
 
             case 'delete':
                 class_name = self.uiQuery("Class to Delete:")
                 if class_name:
                     cmd = CommandClassDelete(class_name)
                     cmd.execute(self.controller)
-                    self.controller.editor.pushCmd(cmd)
+                    self.controller.pushCmd(cmd)
 
             case 'rename':
                 old_name = self.uiQuery("Class to change:")
@@ -61,7 +61,7 @@ class GUI(ui_interface.UI):
                     if new_name:
                         cmd = CommandClassRename(old_name, new_name)
                         cmd.execute(self.controller)
-                        self.controller.editor.pushCmd(cmd)
+                        self.controller.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")
@@ -76,7 +76,7 @@ class GUI(ui_interface.UI):
                     if field_name:
                         cmd = CommandFieldAdd(class_name, field_name)
                         cmd.execute(self.controller)
-                        self.controller.editor.pushCmd(cmd)
+                        self.controller.pushCmd(cmd)
 
             case 'delete':
                 class_name = self.uiQuery("Class to delete field from:")
@@ -85,7 +85,7 @@ class GUI(ui_interface.UI):
                     if field_name:
                         cmd = CommandFieldDelete(class_name, field_name)
                         cmd.execute(self.controller)
-                        self.controller.editor.pushCmd(cmd)
+                        self.controller.pushCmd(cmd)
 
             case 'rename':
                 class_name = self.uiQuery("Class who's field you would like to rename:")
@@ -96,7 +96,7 @@ class GUI(ui_interface.UI):
                         if new_field_name:
                             cmd = CommandFieldRename(class_name, old_field_name, new_field_name)
                             cmd.execute(self.controller)
-                            self.controller.editor.pushCmd(cmd)
+                            self.controller.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")
@@ -115,7 +115,7 @@ class GUI(ui_interface.UI):
                         param_list = list(map(lambda s: s.strip(), params.split(","))) if params else []
                         cmd = CommandMethodAdd(class_name, method_name, param_list)
                         cmd.execute(self.controller)
-                        self.controller.editor.pushCmd(cmd)
+                        self.controller.pushCmd(cmd)
 
             case 'delete':
                 class_name = self.uiQuery("Class to Delete method from:")
@@ -124,7 +124,7 @@ class GUI(ui_interface.UI):
                     if method_name:
                         cmd = CommandMethodDelete(class_name, method_name)
                         cmd.execute(self.controller)
-                        self.controller.editor.pushCmd(cmd)
+                        self.controller.pushCmd(cmd)
 
             case 'rename':
                 class_name = self.uiQuery("Class who's method you would like to rename:")
@@ -135,7 +135,7 @@ class GUI(ui_interface.UI):
                         if new_method_name:
                             cmd = CommandMethodRename(class_name, old_method_name, new_method_name)
                             cmd.execute(self.controller)
-                            self.controller.editor.pushCmd(cmd)
+                            self.controller.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")         
@@ -151,7 +151,7 @@ class GUI(ui_interface.UI):
                     if param_name:
                         cmd = CommandParameterRemove(class_name, method_name, param_name)
                         cmd.execute(self.controller)
-                        self.controller.editor.pushCmd(cmd)
+                        self.controller.pushCmd(cmd)
 
             case 'clear':
                 class_name = self.uiQuery("Class with the desired method:")
@@ -159,7 +159,7 @@ class GUI(ui_interface.UI):
                 if class_name and method_name:
                     cmd = CommandParameterClear(class_name, method_name)
                     cmd.execute(self.controller)
-                    self.controller.editor.pushCmd(cmd)
+                    self.controller.pushCmd(cmd)
 
             case 'rename':
                 class_name = self.uiQuery("Class with the desired method:")
@@ -170,7 +170,7 @@ class GUI(ui_interface.UI):
                     if old_param_name and new_param_name:
                         cmd = CommandParameterRename(class_name, method_name, old_param_name, new_param_name)
                         cmd.execute(self.controller)
-                        self.controller.editor.pushCmd(cmd)
+                        self.controller.pushCmd(cmd)
 
             case 'change':
                 class_name = self.uiQuery("Class with the desired method:")
@@ -179,7 +179,7 @@ class GUI(ui_interface.UI):
                     param_list = self.uiQuery("Input a list of parameters in order (comma-separated):").split(",")
                     cmd = CommandParameterChange(class_name, method_name, [param.strip() for param in param_list])
                     cmd.execute(self.controller)
-                    self.controller.editor.pushCmd(cmd)
+                    self.controller.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")        
@@ -200,7 +200,7 @@ class GUI(ui_interface.UI):
                     if relationship_type_enum:
                         cmd = CommandRelationshipAdd(class1, class2, relationship_type_enum)
                         cmd.execute(self.controller)
-                        self.controller.editor.pushCmd(cmd)
+                        self.controller.pushCmd(cmd)
                     else:
                         self.uiError(f'Invalid relationship type: {relationship_type}')
             case 'delete':
@@ -209,7 +209,7 @@ class GUI(ui_interface.UI):
                 if class1 and class2:
                     cmd = CommandRelationshipDelete(class1, class2)
                     cmd.execute(self.controller)
-                    self.controller.editor.pushCmd(cmd)
+                    self.controller.pushCmd(cmd)
             case 'edit':
                 class1 = self.uiQuery("First Class in Relationship: ")
                 class2 = self.uiQuery("Second Class in Relationship: ")
@@ -223,7 +223,7 @@ class GUI(ui_interface.UI):
                     if relationship_type_enum:
                         cmd = CommandRelationshipEdit(class1, class2, relationship_type_enum)
                         cmd.execute(self.controller)
-                        self.controller.editor.pushCmd(cmd)
+                        self.controller.pushCmd(cmd)
                     else:
                         self.uiError(f'Invalid relationship type: {relationship_type}')
             case _:
@@ -236,7 +236,7 @@ class GUI(ui_interface.UI):
 
     def create_toolbar(self):
         # Create a dropdown for 'Classes'
-        class_menu = tk.Menubutton(self.toolbar, text="Classes", relief=tk.RAISED)                          #command=self.classesCommands
+        class_menu = tk.Menubutton(self.toolbar, name="classes", text="Classes", relief=tk.RAISED)                          #command=self.classesCommands
         class_menu.menu = tk.Menu(class_menu, tearoff=0)
         class_menu["menu"] = class_menu.menu
         class_menu.menu.add_command(label="Add Class", command=lambda: self.classCommandPrompt('add'))    #LAMBDA IS NECESSARY: button should call a user prompt. Prompt is piped into classAdd to add class
@@ -245,7 +245,7 @@ class GUI(ui_interface.UI):
         class_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Fields'
-        field_menu = tk.Menubutton(self.toolbar, text="Fields", relief=tk.RAISED)
+        field_menu = tk.Menubutton(self.toolbar, name="fields", text="Fields", relief=tk.RAISED)
         field_menu.menu = tk.Menu(field_menu, tearoff=0)
         field_menu["menu"] = field_menu.menu
         field_menu.menu.add_command(label="Add Field", command=lambda: self.fieldsCommandPrompt('add'))
@@ -254,7 +254,7 @@ class GUI(ui_interface.UI):
         field_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Methods'
-        method_menu = tk.Menubutton(self.toolbar, text="Methods", relief=tk.RAISED)
+        method_menu = tk.Menubutton(self.toolbar, name="methods", text="Methods", relief=tk.RAISED)
         method_menu.menu = tk.Menu(method_menu, tearoff=0)
         method_menu["menu"] = method_menu.menu
         method_menu.menu.add_command(label="Add Method", command=lambda: self.methodCommandPrompt('add'))
@@ -263,7 +263,7 @@ class GUI(ui_interface.UI):
         method_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Parameters'
-        param_menu = tk.Menubutton(self.toolbar, text="Parameters", relief=tk.RAISED)
+        param_menu = tk.Menubutton(self.toolbar, name="parameters", text="Parameters", relief=tk.RAISED)
         param_menu.menu = tk.Menu(param_menu, tearoff=0)
         param_menu["menu"] = param_menu.menu
         param_menu.menu.add_command(label="Remove Parameter", command=lambda: self.parameterCommandPrompt('remove'))
@@ -273,7 +273,7 @@ class GUI(ui_interface.UI):
         param_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Relationships'
-        relationship_menu = tk.Menubutton(self.toolbar, text="Relationships", relief=tk.RAISED)
+        relationship_menu = tk.Menubutton(self.toolbar, name="relationships", text="Relationships", relief=tk.RAISED)
         relationship_menu.menu = tk.Menu(relationship_menu, tearoff=0)
         relationship_menu["menu"] = relationship_menu.menu
         relationship_menu.menu.add_command(label="Add Relationship", command=lambda: self.relationshipCommandPrompt('add'))         ##command=self.relationshipCommands
@@ -281,20 +281,49 @@ class GUI(ui_interface.UI):
         relationship_menu.menu.add_command(label="Edit Relationship", command=lambda: self.relationshipCommandPrompt('edit'))
         relationship_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Save", command=lambda: self.controller.save()) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, name="save", text="Save", command=lambda: self.controller.save()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Load", command=lambda: self.controller.load()) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, name="load", text="Load", command=lambda: self.controller.load()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Help", command=lambda: self.showHelp()) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, name="help", text="Help", command=lambda: self.showHelp()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_undo = tk.Button(self.toolbar, text="Undo", command=lambda: self.controller.stepCmd(True))
+        button_undo = tk.Button(self.toolbar, name="undo", text="Undo", command=lambda: self.controller.stepCmd(True))
         button_undo.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_undo = tk.Button(self.toolbar, text="Redo", command=lambda: self.controller.stepCmd(False))
-        button_undo.pack(side=tk.LEFT, padx=2, pady=2)
+        button_redo = tk.Button(self.toolbar, name="redo", text="Redo", command=lambda: self.controller.stepCmd(False))
+        button_redo.pack(side=tk.LEFT, padx=2, pady=2)
+    
+    def updateAccess(self):
+        if self.controller.editor.canAddField():
+            b = self.toolbar.nametowidget("fields")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("fields")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canAddMethod():
+            b = self.toolbar.nametowidget("methods")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("methods")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canDoParams():
+            b = self.toolbar.nametowidget("parameters")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("parameters")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canAddRelationship():
+            b = self.toolbar.nametowidget("relationships")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("relationships")
+            b.config(state=tk.DISABLED)
 
 
 # -------------- CLASS VISUALS START ---------------------------------------------------------------------------------------

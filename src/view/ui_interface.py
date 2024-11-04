@@ -26,6 +26,9 @@ class UI:
 
     #===== GUI Commands =====#
     # These commands are implemented only for the GUI, and do nothing in the CLI
+
+    def updateAccess(self):
+        pass
     
     def addClassBox(self, name: str):
         pass

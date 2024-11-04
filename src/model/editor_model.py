@@ -20,6 +20,26 @@ class Editor:
             if rel.src == src and rel.dst == dst:
                 return rel
         return None
+
+    #===== State Checkers =====#
+    # These functions check what actions can be performed from the state of the editor
+    def canAddField(self):
+        return len(self.classes) > 0
+
+    def canAddMethod(self):
+        return len(self.classes) > 0
+
+    def canDoParams(self):
+        for clazz in self.classes:
+            item = self.classes[clazz]
+            if len(item.methods) > 0:
+                return True
+        return False
+
+    def canAddRelationship(self):
+        return len(self.classes) > 1
+
+    #===== Command Stack =====#
     
     def pushCmd(self, cmd):
         self.action_stack.append(cmd)
