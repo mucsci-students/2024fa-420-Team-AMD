@@ -10,6 +10,7 @@ import math
 class GUI(ui_interface.UI):
     def __init__(self, controller):
         self.controller = controller
+        self.silent_mode = False
         self.root = tk.Tk()
         self.root.title("UML Program")
 
@@ -840,10 +841,12 @@ class GUI(ui_interface.UI):
         return filename
 
     def uiFeedback(self, text: str):
-        tk.messagebox.showinfo("Feedback", text)
+        if not self.silent_mode:
+            tk.messagebox.showinfo("Feedback", text)
 
     def uiError(self, text: str):
-        tk.messagebox.showerror("Error", text)
+        if not self.silent_mode:
+            tk.messagebox.showerror("Error", text)
     
     def uiRun(self):
         self.root.mainloop()
