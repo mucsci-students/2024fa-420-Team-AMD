@@ -42,6 +42,76 @@ class EditorController:
                         
         self.ui.uiFeedback(f'=--> Loaded from {filename}!')
 
+    def saveGUI(self):
+        filename = self.ui.uiQuery('Save As (.JSON): ')
+        
+        editor_data = json.dumps(self.editor, cls=EditorEncoder, indent=4)
+        box_positions = {class_name: pos['position'] for class_name, pos in self.ui.box_positions.items()}
+        
+        # Collect relationship data to save
+        relationships = []
+        print("Debug: Current relationship lines in UI:")
+        for (class1, class2), (line, shape) in self.ui.relationship_lines.items():
+            print(f"  - Relationship from {class1} to {class2}")
+
+            relationship_type = self.editor.getRelationshipType(class1, class2)  # Assuming this method exists
+            if relationship_type is not None:
+                relationships.append({
+                    "source": class1,
+                    "destination": class2,
+                    "type": relationship_type.name 
+                })
+            else:
+                print(f"Warning: Relationship between {class1} and {class2} not found in editor.")
+
+        output = {
+            "editor": json.loads(editor_data),  
+            "positions": box_positions,
+            "relationships": relationships 
+        }
+        
+        with open(f'{filename}.JSON', 'w') as f:
+            json.dump(output, f, indent=4)
+            self.ui.uiFeedback(f'Saved to {filename}.JSON!')
+    
+    def loadGUI(self):
+        filename = self.ui.uiQuery('File Name to Open: ')
+
+        self.ui.silent_mode = True
+
+        try:
+            with open(filename, 'r') as f:
+                data = json.load(f)
+                
+                editor_data = data["editor"]
+                for clazz in editor_data['classes']:
+                    self.classAdd(clazz['name'])
+                    for attr in clazz['fields']:
+                        self.addField(clazz['name'], attr['name'])
+                    for method in clazz['methods']:
+                        params = [p['name'] for p in method['params']]
+                        self.addMethod(clazz['name'], method['name'], params)
+
+                for rel in editor_data['relationships']:
+                    self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
+                
+                positions = data.get("positions", {})
+                for class_name, (x, y) in positions.items():
+                    if class_name in self.ui.box_positions:
+                        self.ui.updateBoxPosition(class_name, x, y)
+
+                # Draw relationships after setting box positions
+                for rel in editor_data['relationships']:
+                    self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
+                
+                # Explicitly update the positions of relationship lines
+                for (class1, class2), _ in self.ui.relationship_lines.items():
+                    self.ui.updateRelationshipLines(class1)
+                
+                self.ui.uiFeedback(f'Loaded from {filename}!')
+        finally:
+            self.ui.silent_mode = False;
+
     # Function for Undo/Redo
     # Steps through the command stack in different directions depending on the command
     def stepCmd(self, undo: bool):
@@ -103,14 +173,13 @@ class EditorController:
         return False
 
     # Function which adds a relationship between class1 and class2, which are both strings
-    def relationshipAdd(self, class1, class2, typ) -> bool:
+    def relationshipAdd(self, class1, class2, typ):
         if isinstance(typ, str):
             typ = Type.make(typ.lower())  # Convert string to Type enum if needed
             if not typ:
                 self.ui.uiError(f"Invalid relationship type: {typ}")
                 return False
 
-        # We use tuples to make it simple to check for relationship existence in both orders
         if self.editor.hasRelationship(class1, class2) or self.editor.hasRelationship(class2, class1):
             self.ui.uiError(f'There is already a relationship between `{class1}` and `{class2}`')
         elif class1 not in self.editor.classes:
@@ -118,32 +187,33 @@ class EditorController:
         elif class2 not in self.editor.classes:
             self.ui.uiError(f'class `{class2}` does not exist')
         else:
-            self.editor.relationships.add(Relationship(class1, class2, typ.name))
+            # Add relationship to the editor's relationships dictionary
+            self.editor.relationships[(class1, class2)] = Relationship(class1, class2, typ.name)
             self.ui.uiFeedback(f'Added relationship between {class1} and {class2} of type {typ.name}!')
-                
-            self.ui.drawRelationshipLine(class1, class2, typ.name.lower())  # Pass relationship type as string (lowercased)
+            
+            # Draw the relationship line in the UI
+            self.ui.drawRelationshipLine(class1, class2, typ.name.lower())
             return True
         return False
 
     # Function which deletes a relationship between class1 and class2
-    def relationshipDelete(self, class1, class2) -> bool:
-        if self.editor.hasRelationship(class1, class2):
-            toRemove = None
-            for rel in self.editor.relationships:
-                if rel.src == class1 and rel.dst == class2:
-                    toRemove = rel
-            self.editor.relationships.remove(toRemove)
-            self.ui.uiFeedback(f'Removed relationship between {class1} and {class2}!')
-
+    def relationshipDelete(self, class1, class2):
+        # Check if the relationship exists in either direction
+        if (class1, class2) in self.editor.relationships:
+            # Delete the relationship from the editor's dictionary
+            del self.editor.relationships[(class1, class2)]
             self.ui.deleteRelationshipLine(class1, class2)
+            self.ui.uiFeedback(f'Relationship between {class1} and {class2} deleted.')
             return True
-        elif class1 not in self.editor.classes:
-            self.ui.uiError(f'class `{class1}` does not exist')
-        elif class2 not in self.editor.classes:
-            self.ui.uiError(f'class `{class2}` does not exist')
+        elif (class2, class1) in self.editor.relationships:
+            # If the reverse relationship exists, delete it as well
+            del self.editor.relationships[(class2, class1)]
+            self.ui.deleteRelationshipLine(class2, class1)
+            self.ui.uiFeedback(f'Relationship between {class2} and {class1} deleted.')
+            return True
         else:
-            self.ui.uiError(f'there is no relationship between `{class1}` and `{class2}`')
-        return False
+            self.ui.uiError(f'No relationship found between {class1} and {class2}.')
+            return False
 
     # Function which changes the type of an existing relationship
     def relationshipEdit(self, class1, class2, new_typ) -> bool:
@@ -342,15 +412,18 @@ class EditorController:
     
     # Helper function for listClasses and listRelationships
     def findRelationships(self, class_name):
+        # Find all relationships associated with `class_name`
         related_classes = []
-        
-        for relationship in self.editor.relationships:
-            if not isinstance(relationship.typ, Type):
-                print(f"Invalid type found in relationship: {relationship.typ}")
-            if relationship.src == class_name:
-                related_classes.append((relationship.dst, 'outgoing', relationship.typ))
-            elif relationship.dst == class_name:
-                related_classes.append((relationship.src, 'incoming', relationship.typ))
+        for (src, dst), relationship in self.editor.relationships.items():
+            # Ensure we’re checking the `Relationship` object, not a tuple
+            if src == class_name or dst == class_name:
+                # Check if the relationship has a valid `Type`
+                if not isinstance(relationship.typ, Type):
+                    self.ui.uiError(f"Invalid relationship type for relationship between {src} and {dst}")
+                else:
+                    # Determine direction and add to related_classes list
+                    direction = (class_name == src)
+                    related_classes.append((dst if direction else src, direction, relationship.typ))
         return related_classes
 
     def listRelationships(self, class_name):

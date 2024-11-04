@@ -9,6 +9,7 @@ import json
 class GUI(ui_interface.UI):
     def __init__(self, controller):
         self.controller = controller
+        self.silent_mode = False
         self.root = tk.Tk()
         self.root.title("UML Program")
 
@@ -280,10 +281,10 @@ class GUI(ui_interface.UI):
         relationship_menu.menu.add_command(label="Edit Relationship", command=lambda: self.relationshipCommandPrompt('edit'))
         relationship_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Save", command=lambda: self.controller.save()) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, text="Save", command=lambda: self.controller.saveGUI()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Load", command=lambda: self.controller.load()) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, text="Load", command=lambda: self.controller.loadGUI()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
         button_save = tk.Button(self.toolbar, text="Help", command=lambda: self.showHelp()) #command=self.relationshipCommands)
@@ -336,8 +337,11 @@ class GUI(ui_interface.UI):
                                                 text=f"Method: {method.name}({method_params})")
             text_methods.append(method_text)
 
-        # Store the box and texts (class name + attributes) in a dictionary
-        self.box_positions[class_name] = (box, text_class, text_fields, text_methods)
+        # Store as a dictionary entry with "box" and "position"
+        self.box_positions[class_name] = {
+            "box": (box, text_class, text_fields, text_methods),
+            "position": (self.next_x, self.next_y)
+        }
 
         # Bind mouse events for dragging (move box and all texts together)
         self.canvas.tag_bind(box, '<Button-1>', lambda event, item=box: self.on_box_click(event, item))
@@ -371,7 +375,7 @@ class GUI(ui_interface.UI):
 
     def deleteClassBox(self, class_name):
         if class_name in self.box_positions:
-            box, text_class, text_fields, text_methods = self.box_positions[class_name]
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]["box"]
 
             # Delete the class box and all associated texts (class name + fields + methods)
             self.canvas.delete(box)  # Delete the box itself
@@ -400,13 +404,16 @@ class GUI(ui_interface.UI):
     # Used in controller's renameClass to change class name
     def renameClassBox(self, name, rename):
         if name in self.box_positions:
-            box, text_class, text_attributes, text_methods = self.box_positions[name]
+            box, text_class, text_attributes, text_methods = self.box_positions[name]["box"]
             
             # Update the class name text
             self.canvas.itemconfig(text_class, text=rename)
 
-            # Update the dictionary with the new name (keeping the same box and attributes)
-            self.box_positions[rename] = (box, text_class, text_attributes, text_methods)
+            # Update the dictionary with the new name, preserving both "box" and "position"
+            self.box_positions[rename] = {
+                "box": (box, text_class, text_attributes, text_methods),
+                "position": self.box_positions[name]["position"]
+            }
             del self.box_positions[name]  # Remove the old entry
             
             # Reapply the event bindings to the new name
@@ -435,7 +442,7 @@ class GUI(ui_interface.UI):
     def updateAttributesBox(self, class_name):
         if class_name in self.box_positions:
             # Get the current class data (including fields and methods)
-            box, text_class, text_fields, text_methods = self.box_positions[class_name]
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]["box"]
 
             # Get the current fields and methods from the editor model
             fields = self.controller.editor.classes[class_name].fields
@@ -470,8 +477,11 @@ class GUI(ui_interface.UI):
                                                     text=f"Method: {method.name}({method_params})")
                 text_methods.append(method_text)
 
-            # Update the stored fields and methods in the box_positions dictionary
-            self.box_positions[class_name] = (box, text_class, text_fields, text_methods)
+            # Update the box_positions dictionary to store the new fields and methods
+            self.box_positions[class_name] = {
+                "box": (box, text_class, text_fields, text_methods),
+                "position": self.box_positions[class_name]["position"]
+            }
         else:
             self.uiError(f'Class "{class_name}" does not exist.')
 
@@ -488,8 +498,8 @@ class GUI(ui_interface.UI):
             
         # Draws a relationship line between two classes.
         if class1 in self.box_positions and class2 in self.box_positions:
-            box1, _, _, _ = self.box_positions[class1]
-            box2, _, _, _ = self.box_positions[class2]
+            box1, _, _, _ = self.box_positions[class1]["box"]
+            box2, _, _, _ = self.box_positions[class2]["box"]
 
             # Get the left and right centers of both boxes
             x1_right, y1_right = self.getBoxRightCenter(box1)
@@ -733,7 +743,7 @@ class GUI(ui_interface.UI):
             y = event.y - self.offset_y
 
             # Move the box
-            box, text_class, text_fields, text_methods = self.box_positions[class_name]
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]["box"]
             box_coords = self.canvas.coords(box)
             box_width = box_coords[2] - box_coords[0]
             box_height = box_coords[3] - box_coords[1]
@@ -754,6 +764,12 @@ class GUI(ui_interface.UI):
                 text_y = y + 50 + (len(text_fields) + i) * 20  # Adjust the Y position for each method
                 self.canvas.coords(text_method, x + box_width / 2, text_y)
 
+            # Update the position in the box_positions dictionary
+            self.box_positions[class_name]["position"] = (x, y)
+
+            # Continuously update the relationship lines as the box moves
+            self.updateRelationshipLines(class_name)
+
             # Continuously update the relationship lines as the box moves
 
     def on_box_release(self, event):
@@ -761,7 +777,8 @@ class GUI(ui_interface.UI):
         if self.selected_item:
             class_name = None
             # Find the class name associated with the selected item
-            for name, (box, _, _, _) in self.box_positions.items():
+            for name, data in self.box_positions.items():
+                box, _, _, _ = data["box"]
                 if box == self.selected_item:
                     class_name = name
                     break
@@ -772,13 +789,38 @@ class GUI(ui_interface.UI):
             
             self.selected_item = None
 
+# -------------- SAVE/LOAD FUNCIONS START ----------------------------------------------------------------    
+    
+    def updateBoxPosition(self, class_name, x, y):
+        if class_name in self.box_positions:
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]["box"]
+
+            # Move the box and all associated texts to the new position
+            box_width = self.canvas.coords(box)[2] - self.canvas.coords(box)[0]
+            box_height = self.canvas.coords(box)[3] - self.canvas.coords(box)[1]
+            self.canvas.coords(box, x, y, x + box_width, y + box_height)
+            self.canvas.coords(text_class, x + box_width / 2, y + 25)
+
+            for i, text_field in enumerate(text_fields):
+                text_y = y + 50 + i * 20
+                self.canvas.coords(text_field, x + box_width / 2, text_y)
+
+            for i, text_method in enumerate(text_methods):
+                text_y = y + 50 + (len(text_fields) + i) * 20
+                self.canvas.coords(text_method, x + box_width / 2, text_y)
+
+            # Update the stored position
+            self.box_positions[class_name]["position"] = (x, y)
+
     # -------------- DIAGNOSTIC FUNCTIONS START ----------------------------------------------------------------
 
     def uiFeedback(self, text: str):
-        tk.messagebox.showinfo("Feedback", text)
+        if not self.silent_mode:
+            tk.messagebox.showinfo("Feedback", text)
 
     def uiError(self, text: str):
-        tk.messagebox.showerror("Error", text)
+        if not self.silent_mode:
+            tk.messagebox.showerror("Error", text)
     
     def uiRun(self):
         self.root.mainloop()
