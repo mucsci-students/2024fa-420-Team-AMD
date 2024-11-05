@@ -40,6 +40,7 @@ class EditorController:
             return
 
         if isinstance(self.ui, GUI):
+            # Suppress popups as we load from JSON
             self.ui.silent_mode = True
 
         with open(filename, 'r') as f:
@@ -59,6 +60,9 @@ class EditorController:
                         
         self.ui.uiFeedback(f'=--> Loaded from {filename}!')
         if isinstance(self.ui, GUI):
+            # Recalculate grayed out buttons
+            self.ui.updateAccess()
+            # No longer suppress popups
             self.ui.silent_mode = False
 
     # Function for Undo/Redo
@@ -76,6 +80,8 @@ class EditorController:
             if self.editor.action_idx >= len(self.editor.action_stack):
                 self.editor.action_idx = len(self.editor.action_stack) - 1
             self.editor.action_stack[self.editor.action_idx].execute(self)
+        # Recalculate grayed out buttons
+        self.ui.updateAccess()
     
     def pushCmd(self, cmd):
         self.editor.pushCmd(cmd)
