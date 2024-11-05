@@ -49,14 +49,14 @@ class GUI(ui_interface.UI):
                     self.controller.pushCmd(cmd)
 
             case 'delete':
-                class_name = self.uiQuery("Class to Delete:")
+                class_name = self.uiClassQuery("Class to Delete:")
                 if class_name:
                     cmd = CommandClassDelete(class_name)
                     cmd.execute(self.controller)
                     self.controller.pushCmd(cmd)
 
             case 'rename':
-                old_name = self.uiQuery("Class to change:")
+                old_name = self.uiClassQuery("Class to change:")
                 if old_name:
                     new_name = self.uiQuery("New name:")
                     if new_name:
@@ -71,7 +71,7 @@ class GUI(ui_interface.UI):
     def fieldsCommandPrompt(self, action):
         match action:
             case 'add':
-                class_name = self.uiQuery("Class to add Field to:")
+                class_name = self.uiClassQuery("Class to add Field to:")
                 if class_name:
                     field_name = self.uiQuery("Field name:")
                     if field_name:
@@ -80,7 +80,7 @@ class GUI(ui_interface.UI):
                         self.controller.pushCmd(cmd)
 
             case 'delete':
-                class_name = self.uiQuery("Class to delete field from:")
+                class_name = self.uiClassQuery("Class to delete field from:")
                 if class_name:
                     field_name = self.uiQuery("Field to delete:")
                     if field_name:
@@ -89,7 +89,7 @@ class GUI(ui_interface.UI):
                         self.controller.pushCmd(cmd)
 
             case 'rename':
-                class_name = self.uiQuery("Class who's field you would like to rename:")
+                class_name = self.uiClassQuery("Class with field to rename:")
                 if class_name:
                     old_field_name = self.uiQuery("Field you would like to rename:")
                     if old_field_name:
@@ -106,7 +106,7 @@ class GUI(ui_interface.UI):
     def methodCommandPrompt(self, action):
         match action:
             case 'add':
-                class_name = self.uiQuery("Class to add Method to:")
+                class_name = self.uiClassQuery("Class to add Method to:")
                 if class_name:
                     method_name = self.uiQuery("Method name:")
                     if method_name:
@@ -119,7 +119,7 @@ class GUI(ui_interface.UI):
                         self.controller.pushCmd(cmd)
 
             case 'delete':
-                class_name = self.uiQuery("Class to Delete method from:")
+                class_name = self.uiClassQuery("Class to Delete method from:")
                 if class_name:
                     method_name = self.uiQuery("Method to delete:")
                     if method_name:
@@ -128,7 +128,7 @@ class GUI(ui_interface.UI):
                         self.controller.pushCmd(cmd)
 
             case 'rename':
-                class_name = self.uiQuery("Class who's method you would like to rename:")
+                class_name = self.uiClassQuery("Class with method to rename:")
                 if class_name:
                     old_method_name = self.uiQuery("Method you would like to rename:")
                     if old_method_name:
@@ -145,7 +145,7 @@ class GUI(ui_interface.UI):
     def parameterCommandPrompt(self, action):
         match action:
             case 'remove':
-                class_name = self.uiQuery("Class with the desired Method:")
+                class_name = self.uiClassQuery("Class with the desired Method:")
                 method_name = self.uiQuery("Method to remove parameter from:")
                 if class_name and method_name:
                     param_name = self.uiQuery("Parameter to remove:")
@@ -155,7 +155,7 @@ class GUI(ui_interface.UI):
                         self.controller.pushCmd(cmd)
 
             case 'clear':
-                class_name = self.uiQuery("Class with the desired method:")
+                class_name = self.uiClassQuery("Class with the desired method:")
                 method_name = self.uiQuery("Method to clear parameters from:")
                 if class_name and method_name:
                     cmd = CommandParameterClear(class_name, method_name)
@@ -163,7 +163,7 @@ class GUI(ui_interface.UI):
                     self.controller.pushCmd(cmd)
 
             case 'rename':
-                class_name = self.uiQuery("Class with the desired method:")
+                class_name = self.uiClassQuery("Class with the desired method:")
                 method_name = self.uiQuery("Method to clear parameters from:")
                 if class_name and method_name:
                     old_param_name = self.uiQuery("Parameter to rename:")
@@ -174,7 +174,7 @@ class GUI(ui_interface.UI):
                         self.controller.pushCmd(cmd)
 
             case 'change':
-                class_name = self.uiQuery("Class with the desired method:")
+                class_name = self.uiClassQuery("Class with the desired method:")
                 method_name = self.uiQuery("Method with parameters to change:")
                 if class_name and method_name:
                     param_list = self.uiQuery("Input a list of parameters in order (comma-separated):").split(",")
@@ -189,8 +189,8 @@ class GUI(ui_interface.UI):
     def relationshipCommandPrompt(self, action):
         match action:
             case 'add':
-                class1 = self.uiQuery("First Class in Relationship: ")
-                class2 = self.uiQuery("Second Class in Relationship: ")
+                class1 = self.uiClassQuery("First Class in Relationship: ")
+                class2 = self.uiClassQuery("Second Class in Relationship: ")
 
                 if class1 and class2:
                     # Prompt for the relationship type
@@ -205,15 +205,15 @@ class GUI(ui_interface.UI):
                     else:
                         self.uiError(f'Invalid relationship type: {relationship_type}')
             case 'delete':
-                class1 = self.uiQuery("First Class in Relationship to Delete: ")
-                class2 = self.uiQuery("Second Class in Relationship to Delete: ")
+                class1 = self.uiClassQuery("First Class in Relationship: ")
+                class2 = self.uiClassQuery("Second Class in Relationship: ")
                 if class1 and class2:
                     cmd = CommandRelationshipDelete(class1, class2)
                     cmd.execute(self.controller)
                     self.controller.pushCmd(cmd)
             case 'edit':
-                class1 = self.uiQuery("First Class in Relationship: ")
-                class2 = self.uiQuery("Second Class in Relationship: ")
+                class1 = self.uiClassQuery("First Class in Relationship: ")
+                class2 = self.uiClassQuery("Second Class in Relationship: ")
 
                 if class1 and class2:
                     # Prompt for the relationship type
@@ -853,3 +853,53 @@ class GUI(ui_interface.UI):
     
     def uiQuery(self, prompt: str) -> str:
         return tk.simpledialog.askstring("Input", prompt)
+
+    def uiClassQuery(self, prompt: str) -> str:
+        # Get the list of classes
+        ls = self.controller.editor.getClasses()
+        ls.sort()
+        if len(ls) == 0:
+            self.uiError("No classes are available")
+            return ""
+    
+        # Create a new top-level window for the pop-up
+        popup = tk.Toplevel(self.root)
+        popup.title("Select a Class")
+        popup.resizable(False, False) 
+        popup.geometry("300x250")
+    
+        # Create a label for the prompt
+        label = tk.Label(popup, text=prompt)
+        label.pack(pady=10)
+    
+        # Create a combobox for class selection
+        selected_class = tk.StringVar()
+        selected_class.set(ls[0])
+        menu = tk.OptionMenu(popup, selected_class, *ls)
+        menu.pack(pady=10)
+    
+        # Function to handle the selection and close the popup
+        def on_select():
+            popup.destroy()  # Close the pop-up window
+            return selected_class.get()
+
+        # Function to handle the selection and close the popup
+        def on_cancel():
+            selected_class.set('')
+            return on_select()
+
+        # This prevents any option from being returned when closing a window
+        popup.protocol("WM_DELETE_WINDOW", on_cancel)
+        
+        # Create a button to confirm the selection
+        select_button = tk.Button(popup, text="Select", command=on_select)
+        select_button.pack(pady=10)
+
+        # Create a button for cancelling the selection
+        select_button = tk.Button(popup, text="Cancel", command=on_cancel)
+        select_button.pack(pady=10)
+        
+        # Wait for the pop-up to close
+        self.root.wait_window(popup)
+        
+        return selected_class.get()

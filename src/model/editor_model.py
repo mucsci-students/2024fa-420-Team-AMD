@@ -9,6 +9,10 @@ class Editor:
         self.action_stack = []
         self.action_idx = 0
     
+    def getClasses(self):
+        ls = [c for c in self.classes]
+        return ls
+    
     # Cannot use != as __eq__ can only be called on objects of the same type here
     def hasRelationship(self, src, dst):
         return self.getRelationship(src, dst) is not None
