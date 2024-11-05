@@ -13,6 +13,9 @@ class UI:
     
     def uiQuery(self, prompt: str) -> str:
         pass
+
+    def uiClassQuery(self, prompt: str) -> str:
+        pass
     
     #===== Native File Dialog =====#
     # These functions implement the choosing of a file path,
