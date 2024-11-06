@@ -44,11 +44,13 @@ class EditorEncoder(json.JSONEncoder):
                 'classes': list(obj.classes.values()),
                 'relationships': list(obj.relationships.values())  # Convert dictionary values to a list
             }
+
         if isinstance(obj, Class):
+           # Create a position dictionary if it exists
+            position = {'x': obj.position[0], 'y': obj.position[1]} if hasattr(obj, 'position') else None
             # return {'name': obj.name, 'attributes': list(obj.attributtesSets)}
-            return {'name': obj.name, 'fields': obj.fields, 'methods': obj.methods}
-        if isinstance(obj, Relationship):
-            return {'source': obj.src, 'destination': obj.dst, 'type': obj.typ.display()}
+            return {'name': obj.name, 'fields': obj.fields, 'methods': obj.methods, 'position': position}
+        
         if isinstance(obj, Field):
             return {'name': obj.name}
         if isinstance(obj, Method):
@@ -56,4 +58,7 @@ class EditorEncoder(json.JSONEncoder):
             # in order to comply with the JSON specification
             l = list(map(lambda x: {'name': x}, obj.params))
             return {'name': obj.name, 'params': l}
+        if isinstance(obj, Relationship):
+            return {'source': obj.src, 'destination': obj.dst, 'type': obj.typ.display()}
+        
         return json.JSONEncoder.default(self, obj)

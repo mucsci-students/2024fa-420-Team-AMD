@@ -45,16 +45,30 @@ class EditorController:
     def saveGUI(self):
         filename = self.ui.uiQuery('Save As (.JSON): ')
         
-        editor_data = json.dumps(self.editor, cls=EditorEncoder, indent=4)
-        box_positions = {class_name: pos['position'] for class_name, pos in self.ui.box_positions.items()}
-        
+        # Prepare the list of classes with positions embedded as part of each class object
+        classes_with_positions = []
+        for class_name, class_obj in self.editor.classes.items():
+            fields = [{'name': field.name} for field in class_obj.fields]  #REMEMBER TO ADD TYPES
+            methods = [{'name': method.name,   #REMEMVER TO ADD RETURN TYPES AND PARAM TYPES
+                        'params': [{'name': param} if isinstance(param, str) else {'name': param.name}
+                                for param in method.params]}
+                    for method in class_obj.methods]
+            
+            # Retrieve position from box_positions and add it to the class object
+            position = self.ui.box_positions.get(class_name, {}).get('position', (0, 0))
+            class_data = {
+                'name': class_name,
+                'fields': fields,
+                'methods': methods,
+                'position': {'x': position[0], 'y': position[1]}  # Embed position as x, y coordinates
+            }
+            classes_with_positions.append(class_data)
+
         # Collect relationship data to save
         relationships = []
-        print("Debug: Current relationship lines in UI:")
         for (class1, class2), (line, shape) in self.ui.relationship_lines.items():
-            print(f"  - Relationship from {class1} to {class2}")
 
-            relationship_type = self.editor.getRelationshipType(class1, class2)  # Assuming this method exists
+            relationship_type = self.editor.getRelationshipType(class1, class2)  
             if relationship_type is not None:
                 relationships.append({
                     "source": class1,
@@ -64,15 +78,17 @@ class EditorController:
             else:
                 print(f"Warning: Relationship between {class1} and {class2} not found in editor.")
 
-        output = {
-            "editor": json.loads(editor_data),  
-            "positions": box_positions,
-            "relationships": relationships 
-        }
-        
-        with open(f'{filename}.JSON', 'w') as f:
-            json.dump(output, f, indent=4)
-            self.ui.uiFeedback(f'Saved to {filename}.JSON!')
+            # Prepare the final JSON output
+            output = {
+                "classes": classes_with_positions,
+                "relationships": relationships
+            }
+            
+            # Write to the JSON file
+            with open(f'{filename}.JSON', 'w') as f:
+                json.dump(output, f, indent=4)
+                self.ui.uiFeedback(f'Saved to {filename}.JSON!')
+
     
     def loadGUI(self):
         filename = self.ui.uiQuery('File Name to Open: ')
@@ -216,30 +232,39 @@ class EditorController:
             return False
 
     # Function which changes the type of an existing relationship
-    def relationshipEdit(self, class1, class2, new_typ) -> bool:
-        if self.editor.hasRelationship(class1, class2) or self.editor.hasRelationship(class2, class1):
-            old_typ = None
-            for rel in self.editor.relationships:
-                if rel.src == class1 and rel.dst == class2:
-                    if rel.typ == new_typ:
-                        self.ui.uiError(f'The relationship from `{class1}` to `{class2}` was already of type {new_typ.name}')
-                        return
-                    old_typ = rel.typ
-                    rel.typ = new_typ
-            self.ui.uiFeedback(f'Changed type of {class1} and {class2}\'s relationship from {old_typ.name} to {new_typ.name}')
-            self.ui.deleteRelationshipLine(class1, class2)
-            self.ui.drawRelationshipLine(class1, class2, new_typ.name.lower())  # Pass relationship type as string (lowercased)
-            return True
-        elif class1 not in self.editor.classes:
-            self.ui.uiError(f'Class `{class1}` does not exist')
-        elif class2 not in self.editor.classes:
-            self.ui.uiError(f'Class `{class2}` does not exist')
-        else:
-            self.ui.uiError(f'There is no relationship from {class1} to {class2}!')
-        return False
-    
+    def relationshipEdit(self, class1, class2, new_typ):
+        # Determine the correct key direction for the relationship
+        rel_key = (class1, class2)
+        if not self.editor.hasRelationship(class1, class2):
+            rel_key = (class2, class1)
+            if not self.editor.hasRelationship(class2, class1):
+                self.ui.uiError(f'There is no relationship between `{class1}` and `{class2}`!')
+                return False
+
+        # Retrieve the relationship object from the dictionary
+        rel = self.editor.relationships.get(rel_key)
+        if not isinstance(rel, Relationship):
+            self.ui.uiError(f'Invalid relationship data between `{class1}` and `{class2}`.')
+            return False
+
+        # Check if the new type is the same as the old type
+        if rel.typ == new_typ:
+            self.ui.uiError(f'The relationship from `{class1}` to `{class2}` is already of type {new_typ.name}')
+            return False
+
+        # Change the type of the relationship and provide feedback
+        old_typ = rel.typ
+        rel.typ = new_typ
+        self.ui.uiFeedback(f'Changed relationship from {class1} to {class2} from {old_typ.name} to {new_typ.name}')
+
+        # Update the UI by redrawing the relationship line with the new type
+        self.ui.deleteRelationshipLine(class1, class2)
+        self.ui.drawRelationshipLine(class1, class2, new_typ.name.lower())  # Pass relationship type as string
+
+        return True
+        
     # Function renames given attribute in given class if both exist and new name does not
-    def renameField(self, class1, field1, field2) -> bool:
+    def renameField(self, class1, field1, field2):
         if class1 in self.editor.classes:
             item = self.editor.classes[class1]
             
