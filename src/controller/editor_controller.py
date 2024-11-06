@@ -66,7 +66,13 @@ class EditorController:
             self.ui.silent_mode = False
 
     def saveGUI(self):
-        filename = self.ui.uiQuery('Save As (.JSON): ')
+        filename = self.ui.uiChooseSaveLocation()
+        # For an empty filename (sent on GUI 'Cancel') do nothing
+        if not filename:
+            # If it's the CLI, give clear output
+            if isinstance(self.ui, CLI):
+                self.ui.uiError(f'Could not save to `{filename}`')
+            return
         
         # Prepare the list of classes with positions embedded as part of each class object
         classes_with_positions = []
@@ -114,7 +120,13 @@ class EditorController:
 
     
     def loadGUI(self):
-        filename = self.ui.uiQuery('File Name to Open: ')
+        filename = self.ui.uiChooseLoadLocation()
+        # For an empty filename (sent on GUI 'Cancel') do nothing
+        if not filename:
+            # If it's the CLI, give clear output
+            if isinstance(self.ui, CLI):
+                self.ui.uiError(f'Could not load from `{filename}`')
+            return
 
         self.ui.silent_mode = True
 
