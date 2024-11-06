@@ -78,16 +78,16 @@ class EditorController:
             else:
                 print(f"Warning: Relationship between {class1} and {class2} not found in editor.")
 
-            # Prepare the final JSON output
-            output = {
-                "classes": classes_with_positions,
-                "relationships": relationships
-            }
+        # Prepare the final JSON output
+        output = {
+            "classes": classes_with_positions,
+            "relationships": relationships
+        }
             
-            # Write to the JSON file
-            with open(f'{filename}.JSON', 'w') as f:
-                json.dump(output, f, indent=4)
-                self.ui.uiFeedback(f'Saved to {filename}.JSON!')
+        # Write to the JSON file
+        with open(f'{filename}.JSON', 'w') as f:
+            json.dump(output, f, indent=4)
+            self.ui.uiFeedback(f'Saved to {filename}.JSON!')
 
     
     def loadGUI(self):
@@ -99,34 +99,36 @@ class EditorController:
             with open(filename, 'r') as f:
                 data = json.load(f)
                 
-                editor_data = data["editor"]
-                for clazz in editor_data['classes']:
-                    self.classAdd(clazz['name'])
-                    for attr in clazz['fields']:
-                        self.addField(clazz['name'], attr['name'])
-                    for method in clazz['methods']:
-                        params = [p['name'] for p in method['params']]
-                        self.addMethod(clazz['name'], method['name'], params)
+                # Load classes, fields, methods, and positions
+                for clazz in data['classes']:
+                    name = clazz['name']
+                    self.classAdd(name)
 
-                for rel in editor_data['relationships']:
-                    self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
-                
-                positions = data.get("positions", {})
-                for class_name, (x, y) in positions.items():
-                    if class_name in self.ui.box_positions:
-                        self.ui.updateBoxPosition(class_name, x, y)
+                    # Add fields
+                    for attr in clazz.get('fields', []):
+                        self.addField(name, attr['name'])
 
-                # Draw relationships after setting box positions
-                for rel in editor_data['relationships']:
+                    # Add methods
+                    for method in clazz.get('methods', []):
+                        params = [p['name'] for p in method.get('params', [])]
+                        self.addMethod(name, method['name'], params)
+
+                    # Set position if it exists
+                    if 'position' in clazz:
+                        x, y = clazz['position']['x'], clazz['position']['y']
+                        self.ui.updateBoxPosition(name, x, y)  # Position the class box
+
+                # Load relationships
+                for rel in data['relationships']:
                     self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
-                
-                # Explicitly update the positions of relationship lines
+
+                # Update relationship lines after setting box positions
                 for (class1, class2), _ in self.ui.relationship_lines.items():
                     self.ui.updateRelationshipLines(class1)
-                
+
                 self.ui.uiFeedback(f'Loaded from {filename}!')
         finally:
-            self.ui.silent_mode = False;
+            self.ui.silent_mode = False
 
     # Function for Undo/Redo
     # Steps through the command stack in different directions depending on the command
