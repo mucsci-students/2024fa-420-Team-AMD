@@ -31,3 +31,5 @@ class Class:
         self.name = name
         self.fields = []
         self.methods = []
+        #hidden x and y for 
+        self.position = None
