@@ -14,6 +14,8 @@ def run_gui(editor):
     ui = view.ui_gui.GUI(None) 
     controller = EditorController(ui, editor)  
     ui.controller = controller 
+    # We need to gray out options on startup
+    ui.updateAccess()
     ui.uiRun()  
 
 if __name__ == '__main__':

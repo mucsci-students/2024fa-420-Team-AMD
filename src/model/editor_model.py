@@ -9,12 +9,37 @@ class Editor:
         self.action_stack = []
         self.action_idx = 0
     
+    def getClasses(self):
+        ls = [c for c in self.classes]
+        return ls
+    
+    # Cannot use != as __eq__ can only be called on objects of the same type here
     def hasRelationship(self, src, dst):
         return (src, dst) in self.relationships
 
     # Helper method to get details about a relationship between a source class and a destination class
     def getRelationship(self, src, dst):
         return self.relationships.get((src, dst))
+
+    #===== State Checkers =====#
+    # These functions check what actions can be performed from the state of the editor
+    def canAddField(self):
+        return len(self.classes) > 0
+
+    def canAddMethod(self):
+        return len(self.classes) > 0
+
+    def canDoParams(self):
+        for clazz in self.classes:
+            item = self.classes[clazz]
+            if len(item.methods) > 0:
+                return True
+        return False
+
+    def canAddRelationship(self):
+        return len(self.classes) > 1
+
+    #===== Command Stack =====#
     
     def getRelationshipType(self, class1, class2):
         # Check if a relationship exists between the two classes
