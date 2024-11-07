@@ -14,8 +14,24 @@ class UI:
     def uiQuery(self, prompt: str) -> str:
         pass
 
+    def uiClassQuery(self, prompt: str) -> str:
+        pass
+    
+    #===== Native File Dialog =====#
+    # These functions implement the choosing of a file path,
+    # which is a native dialog in the GUI and a string path input in the CLI
+
+    def uiChooseSaveLocation(self) -> str:
+        pass
+
+    def uiChooseLoadLocation(self) -> str:
+        pass
+
     #===== GUI Commands =====#
     # These commands are implemented only for the GUI, and do nothing in the CLI
+
+    def updateAccess(self):
+        pass
     
     def addClassBox(self, name: str):
         pass

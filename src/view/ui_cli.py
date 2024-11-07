@@ -1,5 +1,6 @@
 from . import ui_interface
 from model.relationship_model import Type
+from model.command_model import *
 
 class CLI(ui_interface.UI):
     def uiFeedback(self, text: str):
@@ -7,6 +8,14 @@ class CLI(ui_interface.UI):
 
     def uiError(self, text: str):
         print(f'ERROR: {text}')
+
+    def uiChooseSaveLocation(self) -> str:
+        filename = self.uiQuery('Save As (Saves to JSON format): ')
+        return filename
+
+    def uiChooseLoadLocation(self) -> str:
+        filename = self.uiQuery('File Name to Open: ')
+        return filename
         
     def uiRun(self, controller):
         print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
@@ -29,10 +38,14 @@ class CLI(ui_interface.UI):
                     controller.save()
                 case 'load':
                     controller.load()
+                case 'undo':
+                    controller.stepCmd(True)
+                case 'redo':
+                    controller.stepCmd(False)
                 case 'list':
                     self.listCommands(controller)
                 case 'help':
-                    print('These are valid commands: class, relationship, field, method, parameter, save, load, list, switch, exit.')
+                    print('These are valid commands: class, relationship, field, method, parameter, save, load, undo, redo, list, switch, exit.')
                     controller.editorHelp()
                 case 'exit':
                     quit = True
@@ -53,14 +66,20 @@ class CLI(ui_interface.UI):
             # If command is 'add' it will prompt for a name and attempt to create a new class of that name#
             case 'add':
                 name = input('  Class Name to Add: ')
-                controller.classAdd(name)
+                cmd = CommandClassAdd(name)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'delete':
                 name = input('  Class to Delete: ')
-                controller.classDelete(name)
+                cmd = CommandClassDelete(name)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'rename':
                 name = input('  Class to change: ')
                 rename = input('    New name: ')
-                controller.classRename(name, rename)
+                cmd = CommandClassRename(name, rename)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case _:
                 print('Print an error here')
     
@@ -80,11 +99,15 @@ class CLI(ui_interface.UI):
                 if typ == None:
                     self.uiError(f'Cannot determine relationship type from `{text}`')
                     return
-                controller.relationshipAdd(class1, class2, typ)
+                cmd = CommandRelationshipAdd(class1, class2, typ)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'delete':
                 class1 = input('  First Class in Relationship to Delete: ')
                 class2 = input('  Second Class in Relationship to Delete: ')
-                controller.relationshipDelete(class1, class2)
+                cmd = CommandRelationshipDelete(class1, class2)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'edit':
                 class1 = input('  First Class in Relationship: ')
                 class2 = input('  Second Class in Relationship: ')
@@ -98,7 +121,9 @@ class CLI(ui_interface.UI):
                 if typ == None:
                     self.uiError(f'Cannot determine relationship type from `{text}`')
                     return
-                controller.relationshipEdit(class1, class2, typ)
+                cmd = CommandRelationshipEdit(class1, class2, typ)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case _:
                 print('Print an error here')
     
@@ -108,16 +133,23 @@ class CLI(ui_interface.UI):
             case 'add':
                 class1 = input('  Class to Add Field To: ')
                 field1 = input('  Field Name: ')
-                controller.addField(class1, field1)
+                cmd = CommandFieldAdd(class1, field1)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'delete':
                 class1 = input('  Class to delete field from: ')
                 field1 = input('  Field to delete: ')
-                controller.deleteField(class1, field1)
+                cmd = CommandFieldDelete(class1, field1)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'rename':
                 class1 = input('  Class who\'s field you would like to rename: ')
                 field1 = input('  Field you would like to rename: ')
                 field2 = input('  Field name you would like to change to: ')
                 controller.renameField(class1, field1, field2)
+                cmd = CommandFieldRename(class1, field1, field2)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case _:
                 print('Print an error here')
 
@@ -135,16 +167,22 @@ class CLI(ui_interface.UI):
                     if param == '':
                         break
                     params.append(param)
-                controller.addMethod(class1, method, params)
+                cmd = CommandMethodAdd(class1, method, params)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'delete':
                 class1 = input('  Class to delete method from: ')
                 method = input('  Method to delete: ')
-                controller.deleteMethod(class1, method)
+                cmd = CommandMethodDelete(class1, method)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'rename':
                 class1 = input('  Class who\'s method you would like to rename: ')
                 method1 = input('  Method you would like to rename: ')
                 method2 = input('  Method name you would like to change to: ')
-                controller.renameMethod(class1, method1, method2)
+                cmd = CommandMethodRename(class1, method1, method2)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case _:
                 print('Print an error here')
 
@@ -155,17 +193,23 @@ class CLI(ui_interface.UI):
                 class1 = input('  Class with the desired Method: ')
                 method = input('  Method to remove parameter from: ')
                 param = input('  Parameter to remove: ')
-                controller.removeParameter(class1, method, param)
+                cmd = CommandParameterRemove(class1, method, param)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'clear':
                 class1 = input('  Class with the desired Method: ')
                 method = input('  Method to clear parameters from: ')
-                controller.clearParameters(class1, method)
+                cmd = CommandParameterClear(class1, method)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'rename':
                 class1 = input('  Class with the desired Method: ')
                 method = input('  Method to clear parameters from: ')
                 param1 = input('  Parameter to rename: ')
                 param2 = input('  New parameter name: ')
-                controller.renameParameter(class1, method, param1, param2)
+                cmd = CommandParameterRename(class1, method, param1, param2)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case 'change':
                 class1 = input('  Class with the desired Method: ')
                 method = input('  Method with parameters to change: ')
@@ -177,7 +221,9 @@ class CLI(ui_interface.UI):
                     if param == '':
                         break
                     params.append(param)
-                controller.replaceParameters(class1, method, params)
+                cmd = CommandParameterChange(class1, method, params)
+                cmd.execute(controller)
+                controller.editor.pushCmd(cmd)
             case _:
                 print('Print an error here')
     
@@ -237,6 +283,12 @@ class CLI(ui_interface.UI):
                     print()
                 case 'load help':
                     print('Loads from a JSON format')
+                    print()
+                case 'undo help':
+                    print('Reverts the latest change in the workspace')
+                    print()
+                case 'redo help':
+                    print('Reapplies reverted changes in the workspace')
                     print()
                 case 'list help':
                     print('Valid subcommands:')

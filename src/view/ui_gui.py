@@ -3,11 +3,14 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, filedialog
 from model.relationship_model import Type
 from model.class_model import Field, Method
+from model.command_model import *
 import json
+import math
 
 class GUI(ui_interface.UI):
     def __init__(self, controller):
         self.controller = controller
+        self.silent_mode = False
         self.root = tk.Tk()
         self.root.title("UML Program")
 
@@ -41,19 +44,25 @@ class GUI(ui_interface.UI):
             case 'add':
                 class_name = self.uiQuery("Class Name to Add:")
                 if class_name:
-                    self.controller.classAdd(class_name)
+                    cmd = CommandClassAdd(class_name)
+                    cmd.execute(self.controller)
+                    self.controller.pushCmd(cmd)
 
             case 'delete':
-                class_name = self.uiQuery("Class to Delete:")
+                class_name = self.uiClassQuery("Class to Delete:")
                 if class_name:
-                    self.controller.classDelete(class_name)
+                    cmd = CommandClassDelete(class_name)
+                    cmd.execute(self.controller)
+                    self.controller.pushCmd(cmd)
 
             case 'rename':
-                old_name = self.uiQuery("Class to change:")
+                old_name = self.uiClassQuery("Class to change:")
                 if old_name:
                     new_name = self.uiQuery("New name:")
                     if new_name:
-                        self.controller.classRename(old_name, new_name)
+                        cmd = CommandClassRename(old_name, new_name)
+                        cmd.execute(self.controller)
+                        self.controller.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")
@@ -62,27 +71,33 @@ class GUI(ui_interface.UI):
     def fieldsCommandPrompt(self, action):
         match action:
             case 'add':
-                class_name = self.uiQuery("Class to add Field to:")
+                class_name = self.uiClassQuery("Class to add Field to:")
                 if class_name:
                     field_name = self.uiQuery("Field name:")
                     if field_name:
-                        self.controller.addField(class_name, field_name)
+                        cmd = CommandFieldAdd(class_name, field_name)
+                        cmd.execute(self.controller)
+                        self.controller.pushCmd(cmd)
 
             case 'delete':
-                class_name = self.uiQuery("Class to delete field from:")
+                class_name = self.uiClassQuery("Class to delete field from:")
                 if class_name:
                     field_name = self.uiQuery("Field to delete:")
                     if field_name:
-                        self.controller.deleteField(class_name, field_name)
+                        cmd = CommandFieldDelete(class_name, field_name)
+                        cmd.execute(self.controller)
+                        self.controller.pushCmd(cmd)
 
             case 'rename':
-                class_name = self.uiQuery("Class who's field you would like to rename:")
+                class_name = self.uiClassQuery("Class with field to rename:")
                 if class_name:
                     old_field_name = self.uiQuery("Field you would like to rename:")
                     if old_field_name:
                         new_field_name = self.uiQuery("Field name you would like to change to:")
                         if new_field_name:
-                            self.controller.renameField(class_name, old_field_name, new_field_name)
+                            cmd = CommandFieldRename(class_name, old_field_name, new_field_name)
+                            cmd.execute(self.controller)
+                            self.controller.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")
@@ -91,7 +106,7 @@ class GUI(ui_interface.UI):
     def methodCommandPrompt(self, action):
         match action:
             case 'add':
-                class_name = self.uiQuery("Class to add Method to:")
+                class_name = self.uiClassQuery("Class to add Method to:")
                 if class_name:
                     method_name = self.uiQuery("Method name:")
                     if method_name:
@@ -99,23 +114,29 @@ class GUI(ui_interface.UI):
                         # We use this lambda to strip all leading whitespace, which the user will most
                         # definitely enter in anyway
                         param_list = list(map(lambda s: s.strip(), params.split(","))) if params else []
-                        self.controller.addMethod(class_name, method_name, param_list)
+                        cmd = CommandMethodAdd(class_name, method_name, param_list)
+                        cmd.execute(self.controller)
+                        self.controller.pushCmd(cmd)
 
             case 'delete':
-                class_name = self.uiQuery("Class to Delete method from:")
+                class_name = self.uiClassQuery("Class to Delete method from:")
                 if class_name:
                     method_name = self.uiQuery("Method to delete:")
                     if method_name:
-                        self.controller.deleteMethod(class_name, method_name)
+                        cmd = CommandMethodDelete(class_name, method_name)
+                        cmd.execute(self.controller)
+                        self.controller.pushCmd(cmd)
 
             case 'rename':
-                class_name = self.uiQuery("Class who's method you would like to rename:")
+                class_name = self.uiClassQuery("Class with method to rename:")
                 if class_name:
                     old_method_name = self.uiQuery("Method you would like to rename:")
                     if old_method_name:
                         new_method_name = self.uiQuery("Method name you would like to change to:")
                         if new_method_name:
-                            self.controller.renameMethod(class_name, old_method_name, new_method_name)
+                            cmd = CommandMethodRename(class_name, old_method_name, new_method_name)
+                            cmd.execute(self.controller)
+                            self.controller.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")         
@@ -124,34 +145,42 @@ class GUI(ui_interface.UI):
     def parameterCommandPrompt(self, action):
         match action:
             case 'remove':
-                class_name = self.uiQuery("Class with the desired Method:")
+                class_name = self.uiClassQuery("Class with the desired Method:")
                 method_name = self.uiQuery("Method to remove parameter from:")
                 if class_name and method_name:
                     param_name = self.uiQuery("Parameter to remove:")
                     if param_name:
-                        self.controller.removeParameter(class_name, method_name, param_name)
+                        cmd = CommandParameterRemove(class_name, method_name, param_name)
+                        cmd.execute(self.controller)
+                        self.controller.pushCmd(cmd)
 
             case 'clear':
-                class_name = self.uiQuery("Class with the desired method:")
+                class_name = self.uiClassQuery("Class with the desired method:")
                 method_name = self.uiQuery("Method to clear parameters from:")
                 if class_name and method_name:
-                    self.controller.clearParameters(class_name, method_name)
+                    cmd = CommandParameterClear(class_name, method_name)
+                    cmd.execute(self.controller)
+                    self.controller.pushCmd(cmd)
 
             case 'rename':
-                class_name = self.uiQuery("Class with the desired method:")
+                class_name = self.uiClassQuery("Class with the desired method:")
                 method_name = self.uiQuery("Method to clear parameters from:")
                 if class_name and method_name:
                     old_param_name = self.uiQuery("Parameter to rename:")
                     new_param_name = self.uiQuery("New parameter name:")
                     if old_param_name and new_param_name:
-                        self.controller.renameParameter(class_name, method_name, old_param_name, new_param_name)
+                        cmd = CommandParameterRename(class_name, method_name, old_param_name, new_param_name)
+                        cmd.execute(self.controller)
+                        self.controller.pushCmd(cmd)
 
             case 'change':
-                class_name = self.uiQuery("Class with the desired method:")
+                class_name = self.uiClassQuery("Class with the desired method:")
                 method_name = self.uiQuery("Method with parameters to change:")
                 if class_name and method_name:
                     param_list = self.uiQuery("Input a list of parameters in order (comma-separated):").split(",")
-                    self.controller.replaceParameters(class_name, method_name, [param.strip() for param in param_list])
+                    cmd = CommandParameterChange(class_name, method_name, [param.strip() for param in param_list])
+                    cmd.execute(self.controller)
+                    self.controller.pushCmd(cmd)
 
             case _:
                 self.uiError("Invalid action.")        
@@ -160,8 +189,8 @@ class GUI(ui_interface.UI):
     def relationshipCommandPrompt(self, action):
         match action:
             case 'add':
-                class1 = self.uiQuery("First Class in Relationship: ")
-                class2 = self.uiQuery("Second Class in Relationship: ")
+                class1 = self.uiClassQuery("First Class in Relationship: ")
+                class2 = self.uiClassQuery("Second Class in Relationship: ")
 
                 if class1 and class2:
                     # Prompt for the relationship type
@@ -170,17 +199,21 @@ class GUI(ui_interface.UI):
                     # Validate the relationship type using Type.make
                     relationship_type_enum = Type.make(relationship_type)
                     if relationship_type_enum:
-                        self.controller.relationshipAdd(class1, class2, relationship_type_enum)
+                        cmd = CommandRelationshipAdd(class1, class2, relationship_type_enum)
+                        cmd.execute(self.controller)
+                        self.controller.pushCmd(cmd)
                     else:
                         self.uiError(f'Invalid relationship type: {relationship_type}')
             case 'delete':
-                class1 = self.uiQuery("First Class in Relationship to Delete: ")
-                class2 = self.uiQuery("Second Class in Relationship to Delete: ")
+                class1 = self.uiClassQuery("First Class in Relationship: ")
+                class2 = self.uiClassQuery("Second Class in Relationship: ")
                 if class1 and class2:
-                    self.controller.relationshipDelete(class1, class2)
+                    cmd = CommandRelationshipDelete(class1, class2)
+                    cmd.execute(self.controller)
+                    self.controller.pushCmd(cmd)
             case 'edit':
-                class1 = self.uiQuery("First Class in Relationship: ")
-                class2 = self.uiQuery("Second Class in Relationship: ")
+                class1 = self.uiClassQuery("First Class in Relationship: ")
+                class2 = self.uiClassQuery("Second Class in Relationship: ")
 
                 if class1 and class2:
                     # Prompt for the relationship type
@@ -189,7 +222,9 @@ class GUI(ui_interface.UI):
                     # Validate the relationship type using Type.make
                     relationship_type_enum = Type.make(relationship_type)
                     if relationship_type_enum:
-                        self.controller.relationshipEdit(class1, class2, relationship_type_enum)
+                        cmd = CommandRelationshipEdit(class1, class2, relationship_type_enum)
+                        cmd.execute(self.controller)
+                        self.controller.pushCmd(cmd)
                     else:
                         self.uiError(f'Invalid relationship type: {relationship_type}')
             case _:
@@ -202,7 +237,7 @@ class GUI(ui_interface.UI):
 
     def create_toolbar(self):
         # Create a dropdown for 'Classes'
-        class_menu = tk.Menubutton(self.toolbar, text="Classes", relief=tk.RAISED)                          #command=self.classesCommands
+        class_menu = tk.Menubutton(self.toolbar, name="classes", text="Classes", relief=tk.RAISED)                          #command=self.classesCommands
         class_menu.menu = tk.Menu(class_menu, tearoff=0)
         class_menu["menu"] = class_menu.menu
         class_menu.menu.add_command(label="Add Class", command=lambda: self.classCommandPrompt('add'))    #LAMBDA IS NECESSARY: button should call a user prompt. Prompt is piped into classAdd to add class
@@ -211,7 +246,7 @@ class GUI(ui_interface.UI):
         class_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Fields'
-        field_menu = tk.Menubutton(self.toolbar, text="Fields", relief=tk.RAISED)
+        field_menu = tk.Menubutton(self.toolbar, name="fields", text="Fields", relief=tk.RAISED)
         field_menu.menu = tk.Menu(field_menu, tearoff=0)
         field_menu["menu"] = field_menu.menu
         field_menu.menu.add_command(label="Add Field", command=lambda: self.fieldsCommandPrompt('add'))
@@ -220,7 +255,7 @@ class GUI(ui_interface.UI):
         field_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Methods'
-        method_menu = tk.Menubutton(self.toolbar, text="Methods", relief=tk.RAISED)
+        method_menu = tk.Menubutton(self.toolbar, name="methods", text="Methods", relief=tk.RAISED)
         method_menu.menu = tk.Menu(method_menu, tearoff=0)
         method_menu["menu"] = method_menu.menu
         method_menu.menu.add_command(label="Add Method", command=lambda: self.methodCommandPrompt('add'))
@@ -229,7 +264,7 @@ class GUI(ui_interface.UI):
         method_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Parameters'
-        param_menu = tk.Menubutton(self.toolbar, text="Parameters", relief=tk.RAISED)
+        param_menu = tk.Menubutton(self.toolbar, name="parameters", text="Parameters", relief=tk.RAISED)
         param_menu.menu = tk.Menu(param_menu, tearoff=0)
         param_menu["menu"] = param_menu.menu
         param_menu.menu.add_command(label="Remove Parameter", command=lambda: self.parameterCommandPrompt('remove'))
@@ -239,7 +274,7 @@ class GUI(ui_interface.UI):
         param_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
         # Create a dropdown for 'Relationships'
-        relationship_menu = tk.Menubutton(self.toolbar, text="Relationships", relief=tk.RAISED)
+        relationship_menu = tk.Menubutton(self.toolbar, name="relationships", text="Relationships", relief=tk.RAISED)
         relationship_menu.menu = tk.Menu(relationship_menu, tearoff=0)
         relationship_menu["menu"] = relationship_menu.menu
         relationship_menu.menu.add_command(label="Add Relationship", command=lambda: self.relationshipCommandPrompt('add'))         ##command=self.relationshipCommands
@@ -247,14 +282,49 @@ class GUI(ui_interface.UI):
         relationship_menu.menu.add_command(label="Edit Relationship", command=lambda: self.relationshipCommandPrompt('edit'))
         relationship_menu.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Save", command=lambda: self.controller.save()) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, name="save", text="Save", command=lambda: self.controller.saveGUI()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Load", command=lambda: self.controller.load()) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, name="load", text="Load", command=lambda: self.controller.loadGUI()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_save = tk.Button(self.toolbar, text="Help", command=lambda: self.showHelp()) #command=self.relationshipCommands)
+        button_save = tk.Button(self.toolbar, name="help", text="Help", command=lambda: self.showHelp()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
+
+        button_undo = tk.Button(self.toolbar, name="undo", text="Undo", command=lambda: self.controller.stepCmd(True))
+        button_undo.pack(side=tk.LEFT, padx=2, pady=2)
+
+        button_redo = tk.Button(self.toolbar, name="redo", text="Redo", command=lambda: self.controller.stepCmd(False))
+        button_redo.pack(side=tk.LEFT, padx=2, pady=2)
+    
+    def updateAccess(self):
+        if self.controller.editor.canAddField():
+            b = self.toolbar.nametowidget("fields")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("fields")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canAddMethod():
+            b = self.toolbar.nametowidget("methods")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("methods")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canDoParams():
+            b = self.toolbar.nametowidget("parameters")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("parameters")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canAddRelationship():
+            b = self.toolbar.nametowidget("relationships")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("relationships")
+            b.config(state=tk.DISABLED)
 
 
 # -------------- CLASS VISUALS START ---------------------------------------------------------------------------------------
@@ -297,8 +367,11 @@ class GUI(ui_interface.UI):
                                                 text=f"Method: {method.name}({method_params})")
             text_methods.append(method_text)
 
-        # Store the box and texts (class name + attributes) in a dictionary
-        self.box_positions[class_name] = (box, text_class, text_fields, text_methods)
+        # Store as a dictionary entry with "box" and "position"
+        self.box_positions[class_name] = {
+            "box": (box, text_class, text_fields, text_methods),
+            "position": (self.next_x, self.next_y)
+        }
 
         # Bind mouse events for dragging (move box and all texts together)
         self.canvas.tag_bind(box, '<Button-1>', lambda event, item=box: self.on_box_click(event, item))
@@ -332,7 +405,7 @@ class GUI(ui_interface.UI):
 
     def deleteClassBox(self, class_name):
         if class_name in self.box_positions:
-            box, text_class, text_fields, text_methods = self.box_positions[class_name]
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]["box"]
 
             # Delete the class box and all associated texts (class name + fields + methods)
             self.canvas.delete(box)  # Delete the box itself
@@ -361,13 +434,16 @@ class GUI(ui_interface.UI):
     # Used in controller's renameClass to change class name
     def renameClassBox(self, name, rename):
         if name in self.box_positions:
-            box, text_class, text_attributes, text_methods = self.box_positions[name]
+            box, text_class, text_attributes, text_methods = self.box_positions[name]["box"]
             
             # Update the class name text
             self.canvas.itemconfig(text_class, text=rename)
 
-            # Update the dictionary with the new name (keeping the same box and attributes)
-            self.box_positions[rename] = (box, text_class, text_attributes, text_methods)
+            # Update the dictionary with the new name, preserving both "box" and "position"
+            self.box_positions[rename] = {
+                "box": (box, text_class, text_attributes, text_methods),
+                "position": self.box_positions[name]["position"]
+            }
             del self.box_positions[name]  # Remove the old entry
             
             # Reapply the event bindings to the new name
@@ -396,7 +472,7 @@ class GUI(ui_interface.UI):
     def updateAttributesBox(self, class_name):
         if class_name in self.box_positions:
             # Get the current class data (including fields and methods)
-            box, text_class, text_fields, text_methods = self.box_positions[class_name]
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]["box"]
 
             # Get the current fields and methods from the editor model
             fields = self.controller.editor.classes[class_name].fields
@@ -431,8 +507,11 @@ class GUI(ui_interface.UI):
                                                     text=f"Method: {method.name}({method_params})")
                 text_methods.append(method_text)
 
-            # Update the stored fields and methods in the box_positions dictionary
-            self.box_positions[class_name] = (box, text_class, text_fields, text_methods)
+            # Update the box_positions dictionary to store the new fields and methods
+            self.box_positions[class_name] = {
+                "box": (box, text_class, text_fields, text_methods),
+                "position": self.box_positions[class_name]["position"]
+            }
         else:
             self.uiError(f'Class "{class_name}" does not exist.')
 
@@ -449,8 +528,8 @@ class GUI(ui_interface.UI):
             
         # Draws a relationship line between two classes.
         if class1 in self.box_positions and class2 in self.box_positions:
-            box1, _, _, _ = self.box_positions[class1]
-            box2, _, _, _ = self.box_positions[class2]
+            box1, _, _, _ = self.box_positions[class1]["box"]
+            box2, _, _, _ = self.box_positions[class2]["box"]
 
             # Get the left and right centers of both boxes
             x1_right, y1_right = self.getBoxRightCenter(box1)
@@ -462,30 +541,43 @@ class GUI(ui_interface.UI):
             if x1_right < x2_left:
                 # class1 is to the left of class2: draw from the right side of class1 to the left side of class2
                 x1, y1 = x1_right, y1_right
-                x2, y2 = x2_left, y2_left
+                x2, y2 = (x2_left - 10), y2_left
                 arrow_direction = tk.LAST  # Arrow should point towards class2
             else:
                 # class2 is to the left of class1: draw from the right side of class2 to the left side of class1
-                x1, y1 = x2_right, y2_right
+                x1, y1 = (x2_right + 10), y2_right
                 x2, y2 = x1_left, y1_left
                 arrow_direction = tk.FIRST  # Arrow should point towards class1
 
-            # Initialize shape variable to None
-            line, shape = None, None
+            angle = self.compute_angle(x1, y1, x2, y2)
+            extension = 10  # Extend the line into the shape
 
-            # Call the appropriate function based on the relationship type
-            if relationship_type == Type.Aggregate:
-                line, shape = self.drawAggregationLine(x1, y1, x2, y2, arrow_direction)
-            elif relationship_type == Type.Composition:
-                line, shape = self.drawCompositionLine(x1, y1, x2, y2, arrow_direction)
-            elif relationship_type == Type.Inheritance:
-                line, shape = self.drawInheritanceLine(x1, y1, x2, y2, arrow_direction)
-            elif relationship_type == Type.Realization:
-                line, shape = self.drawRealizationLine(x1, y1, x2, y2, arrow_direction)
+            # Extend the endpoint of the line to go into the shape
+            x2_extended = x2 + extension * math.cos(angle)
+            y2_extended = y2 + extension * math.sin(angle)
+
+            # Draw the line with the appropriate style
+            if relationship_type == Type.Realization:
+                # Dotted line for realization
+                line = self.canvas.create_line(x1, y1, x2_extended, y2_extended, dash=(4, 2), arrow=arrow_direction)
             else:
-                # If an invalid relationship_type is provided, raise an error
+                # Solid line for other types
+                line = self.canvas.create_line(x1, y1, x2_extended, y2_extended, arrow=arrow_direction)
+
+            # Draw the shape at the actual endpoint
+            if relationship_type == Type.Aggregate:
+                shape = self.drawDiamond(x2, y2, angle) if arrow_direction == tk.LAST else self.drawDiamond(x1, y1, angle)
+            elif relationship_type == Type.Composition:
+                shape = self.drawFilledDiamond(x2, y2, angle) if arrow_direction == tk.LAST else self.drawFilledDiamond(x1, y1, angle)
+            elif relationship_type == Type.Inheritance:
+                flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
+                shape = self.drawTriangle(x2, y2, angle, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, angle, flip)
+            elif relationship_type == Type.Realization:
+                flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
+                shape = self.drawTriangle(x2, y2, angle, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, angle, flip)
+            else:
                 self.uiError(f"Invalid relationship type: {relationship_type}")
-                return  # Exit early if an invalid type is encountered
+                return
 
             self.relationship_lines[(class1, class2)] = (line, shape)
 
@@ -502,75 +594,87 @@ class GUI(ui_interface.UI):
             self.canvas.delete(shape)
             del self.relationship_lines[(class2, class1)]
 
-    def drawAggregationLine(self, x1, y1, x2, y2, arrow_direction):
+    def drawAggregationLine(self, x1, y1, x2, y2, arrow_direction, angle):
         # Draws a solid directional line with a diamond for aggregation relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
-        shape = self.drawDiamond(x2, y2) if arrow_direction == tk.LAST else self.drawDiamond(x1, y1)
+        shape = self.drawDiamond(x2, y2, angle) if arrow_direction == tk.LAST else self.drawDiamond(x1, y1, angle)
         return line, shape
 
-    def drawCompositionLine(self, x1, y1, x2, y2, arrow_direction):
+    def drawCompositionLine(self, x1, y1, x2, y2, arrow_direction, angle):
         # Draws a solid directional line with a filled diamond for composition relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
-        shape = self.drawFilledDiamond(x2, y2) if arrow_direction == tk.LAST else self.drawFilledDiamond(x1, y1)
+        shape = self.drawFilledDiamond(x2, y2, angle) if arrow_direction == tk.LAST else self.drawFilledDiamond(x1, y1, angle)
         return line, shape
 
-    def drawInheritanceLine(self, x1, y1, x2, y2, arrow_direction):
+    def drawInheritanceLine(self, x1, y1, x2, y2, arrow_direction, angle):
         # Draws a solid directional line with a triangle for inheritance relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, arrow=arrow_direction)
         # Determine if the triangle needs to be flipped
         flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
-        shape = self.drawTriangle(x2, y2, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, flip)
+        shape = self.drawTriangle(x2, y2, angle, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, angle, flip)
         return line, shape
 
-    def drawRealizationLine(self, x1, y1, x2, y2, arrow_direction):
+    def drawRealizationLine(self, x1, y1, x2, y2, arrow_direction, angle):
         # Draws a dashed directional line with a triangle for realization relationship.
         line = self.canvas.create_line(x1, y1, x2, y2, dash=(4, 2), arrow=arrow_direction)
         # Determine if the triangle needs to be flipped
         flip = (arrow_direction == tk.LAST and x1 < x2) or (arrow_direction == tk.FIRST and x1 > x2)
-        shape = self.drawTriangle(x2, y2, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, flip)
+        shape = self.drawTriangle(x2, y2, angle, flip) if arrow_direction == tk.LAST else self.drawTriangle(x1, y1, angle, flip)
         return line, shape
 
-    def drawDiamond(self, x2, y2):
+    def compute_angle(self, x1, y1, x2, y2):
+        return math.atan2(y2 - y1, x2 - x1)
+
+    def drawDiamond(self, x2, y2, angle):
         # Draws a diamond at the end of a line for aggregation.
-        size = 10
+        size = 17
+        half_size = size / 2
+
+        # Calculate the corners of the diamond based on fixed offsets
         diamond = self.canvas.create_polygon(
-            x2, y2 - size,  # Top
-            x2 + size, y2,  # Right
-            x2, y2 + size,  # Bottom
-            x2 - size, y2,  # Left
+            x2 + half_size * math.cos(angle), y2 + half_size * math.sin(angle),         # Right point
+            x2 - half_size * math.sin(angle), y2 + half_size * math.cos(angle),         # Top point
+            x2 - half_size * math.cos(angle), y2 - half_size * math.sin(angle),         # Left point
+            x2 + half_size * math.sin(angle), y2 - half_size * math.cos(angle),         # Bottom point
             fill="white", outline="black"
         )
+
         return diamond
 
-    def drawFilledDiamond(self, x2, y2):
-        # Draws a diamond at the end of a line for Composition.
-        size = 10
+    def drawFilledDiamond(self, x2, y2, angle):
+        # Draws a diamond at the end of a line for composition.
+        size = 17
+        half_size = size / 2
+
+        # Calculate the corners of the diamond based on fixed offsets
         filled_diamond = self.canvas.create_polygon(
-            x2, y2 - size,  # Top
-            x2 + size, y2,  # Right
-            x2, y2 + size,  # Bottom
-            x2 - size, y2,  # Left
+            x2 + half_size * math.cos(angle), y2 + half_size * math.sin(angle),         # Right point
+            x2 - half_size * math.sin(angle), y2 + half_size * math.cos(angle),         # Top point
+            x2 - half_size * math.cos(angle), y2 - half_size * math.sin(angle),         # Left point
+            x2 + half_size * math.sin(angle), y2 - half_size * math.cos(angle),         # Bottom point
             fill="black", outline="black"
         )
+
         return filled_diamond
 
-    def drawTriangle(self, x2, y2, flip=False):
+    def drawTriangle(self, x2, y2, angle, flip=False):
         # Draws a triangle at the end of a line for inheritance and realization.
         size = 10
-        if flip:
-            # Flipped triangle (left to right)
+        dx, dy = size * math.cos(angle), size * math.sin(angle)
+        if not flip:
+            # Triangle pointing in the opposite direction
             triangle = self.canvas.create_polygon(
-                x2 + size, y2,          # Tip of the triangle (right point)
-                x2 - size, y2 - size,   # Top-left point
-                x2 - size, y2 + size,   # Bottom-left point
+                x2 - dx, y2 - dy,         # Tip of the triangle (flipped direction)
+                x2 + dy, y2 - dx,         # Base left
+                x2 - dy, y2 + dx,         # Base right
                 fill="white", outline="black"
             )
         else:
-            # Normal triangle (right to left)
+            # Triangle pointing in the direction of the line
             triangle = self.canvas.create_polygon(
-                x2 - size, y2,          # Tip of the triangle (left point)
-                x2 + size, y2 - size,   # Top-right point
-                x2 + size, y2 + size,   # Bottom-right point
+                x2 + dx, y2 + dy,         # Tip of the triangle
+                x2 - dy, y2 + dx,         # Base left
+                x2 + dy, y2 - dx,         # Base right
                 fill="white", outline="black"
             )
         
@@ -694,7 +798,7 @@ class GUI(ui_interface.UI):
             y = event.y - self.offset_y
 
             # Move the box
-            box, text_class, text_fields, text_methods = self.box_positions[class_name]
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]["box"]
             box_coords = self.canvas.coords(box)
             box_width = box_coords[2] - box_coords[0]
             box_height = box_coords[3] - box_coords[1]
@@ -715,14 +819,23 @@ class GUI(ui_interface.UI):
                 text_y = y + 50 + (len(text_fields) + i) * 20  # Adjust the Y position for each method
                 self.canvas.coords(text_method, x + box_width / 2, text_y)
 
+            # Update the position in the box_positions dictionary
+            self.box_positions[class_name]["position"] = (x, y)
+
             # Continuously update the relationship lines as the box moves
+            self.updateRelationshipLines(class_name)
+
+            # Continuously update the relationship lines as the box moves
+            if class_name:
+                self.updateRelationshipLines(class_name)
 
     def on_box_release(self, event):
         # Called when the user releases the mouse after dragging a box
         if self.selected_item:
             class_name = None
             # Find the class name associated with the selected item
-            for name, (box, _, _, _) in self.box_positions.items():
+            for name, data in self.box_positions.items():
+                box, _, _, _ = data["box"]
                 if box == self.selected_item:
                     class_name = name
                     break
@@ -733,16 +846,99 @@ class GUI(ui_interface.UI):
             
             self.selected_item = None
 
+# -------------- SAVE/LOAD FUNCIONS START ----------------------------------------------------------------    
+    
+    def updateBoxPosition(self, class_name, x, y):
+        if class_name in self.box_positions:
+            box, text_class, text_fields, text_methods = self.box_positions[class_name]["box"]
+
+            # Move the box and all associated texts to the new position
+            box_width = self.canvas.coords(box)[2] - self.canvas.coords(box)[0]
+            box_height = self.canvas.coords(box)[3] - self.canvas.coords(box)[1]
+            self.canvas.coords(box, x, y, x + box_width, y + box_height)
+            self.canvas.coords(text_class, x + box_width / 2, y + 25)
+
+            for i, text_field in enumerate(text_fields):
+                text_y = y + 50 + i * 20
+                self.canvas.coords(text_field, x + box_width / 2, text_y)
+
+            for i, text_method in enumerate(text_methods):
+                text_y = y + 50 + (len(text_fields) + i) * 20
+                self.canvas.coords(text_method, x + box_width / 2, text_y)
+
+            # Update the stored position
+            self.box_positions[class_name]["position"] = (x, y)
+
     # -------------- DIAGNOSTIC FUNCTIONS START ----------------------------------------------------------------
 
+    def uiChooseSaveLocation(self) -> str:
+        filename = tk.filedialog.asksaveasfilename(title="Select a File", filetypes=[("JSON files", "*.JSON")])
+        return filename
+
+    def uiChooseLoadLocation(self) -> str:
+        filename = tk.filedialog.askopenfilename(title="Select a File", filetypes=[("JSON files", "*.JSON")])
+        return filename
+
     def uiFeedback(self, text: str):
-        tk.messagebox.showinfo("Feedback", text)
+        if not self.silent_mode:
+            tk.messagebox.showinfo("Feedback", text)
 
     def uiError(self, text: str):
-        tk.messagebox.showerror("Error", text)
+        if not self.silent_mode:
+            tk.messagebox.showerror("Error", text)
     
     def uiRun(self):
         self.root.mainloop()
     
     def uiQuery(self, prompt: str) -> str:
         return tk.simpledialog.askstring("Input", prompt)
+
+    def uiClassQuery(self, prompt: str) -> str:
+        # Get the list of classes
+        ls = self.controller.editor.getClasses()
+        ls.sort()
+        if len(ls) == 0:
+            self.uiError("No classes are available")
+            return ""
+    
+        # Create a new top-level window for the pop-up
+        popup = tk.Toplevel(self.root)
+        popup.title("Select a Class")
+        popup.resizable(False, False) 
+        popup.geometry("300x250")
+    
+        # Create a label for the prompt
+        label = tk.Label(popup, text=prompt)
+        label.pack(pady=10)
+    
+        # Create a combobox for class selection
+        selected_class = tk.StringVar()
+        selected_class.set(ls[0])
+        menu = tk.OptionMenu(popup, selected_class, *ls)
+        menu.pack(pady=10)
+    
+        # Function to handle the selection and close the popup
+        def on_select():
+            popup.destroy()  # Close the pop-up window
+            return selected_class.get()
+
+        # Function to handle the selection and close the popup
+        def on_cancel():
+            selected_class.set('')
+            return on_select()
+
+        # This prevents any option from being returned when closing a window
+        popup.protocol("WM_DELETE_WINDOW", on_cancel)
+        
+        # Create a button to confirm the selection
+        select_button = tk.Button(popup, text="Select", command=on_select)
+        select_button.pack(pady=10)
+
+        # Create a button for cancelling the selection
+        select_button = tk.Button(popup, text="Cancel", command=on_cancel)
+        select_button.pack(pady=10)
+        
+        # Wait for the pop-up to close
+        self.root.wait_window(popup)
+        
+        return selected_class.get()
