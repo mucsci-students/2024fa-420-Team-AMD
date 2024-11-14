@@ -25,8 +25,8 @@ if __name__ == '__main__':
     ui_mode = 'gui'
 
     # Check for command-line arguments
-    if len(sys.argv) > 2 and sys.argv[1] == '--mode':
-        ui_mode = sys.argv[2]
+    if len(sys.argv) > 1 and sys.argv[1] == '--cli':
+        ui_mode = 'cli'
 
     while True:
         if ui_mode == 'cli':
