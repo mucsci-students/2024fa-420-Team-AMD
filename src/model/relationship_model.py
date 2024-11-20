@@ -31,6 +31,18 @@ class Type(Enum):
             case _:
                 return None
     
+    def tab_completions() -> str:
+        return [
+            'aggregate',
+            'composition',
+            'inheritance',
+            'realization',
+            'Aggregate',
+            'Composition',
+            'Inheritance',
+            'Realization',
+        ]
+    
 class Relationship:
     def __init__(self, src, dst, typ):
         self.src = src
