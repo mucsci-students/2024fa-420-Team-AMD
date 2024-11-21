@@ -56,14 +56,6 @@ class Completions(Completer):
         matches = [option for option in self.tab_completions if option.startswith(text)]
         for m in matches:
             yield Completion(m, -len(text))
-
-    # Set tab completions
-    def activate(self):
-        pass
-
-    # Disable tab completions
-    def deactivate(self):
-        pass
     
     # Similar to python's `input()` except it automatically manages tab completions
     def tab_input(self, prompt) -> str:
