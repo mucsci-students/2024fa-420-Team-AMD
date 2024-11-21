@@ -72,7 +72,7 @@ class EditorEncoder(json.JSONEncoder):
 
         if isinstance(obj, Class):
            # Create a position dictionary if it exists
-            position = {'x': obj.position[0], 'y': obj.position[1]} if hasattr(obj, 'position') else None
+            position = {'x': obj.position[0], 'y': obj.position[1]} if hasattr(obj, 'position') and obj.position is not None else None
             # return {'name': obj.name, 'attributes': list(obj.attributtesSets)}
             return {'name': obj.name, 'fields': obj.fields, 'methods': obj.methods, 'position': position}
         
