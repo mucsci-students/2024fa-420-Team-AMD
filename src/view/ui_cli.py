@@ -248,7 +248,7 @@ class CLI(ui_interface.UI):
                 Completions.instance().field_completions(controller, class1)
                 field1 = Completions.instance().tab_input('  Field you would like to rename: ')
                 field2 = input('  Field name you would like to change to: ')
-                controller.renameField(class1, field1, field2)
+
                 cmd = CommandFieldRename(class1, field1, field2)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
