@@ -63,11 +63,6 @@ class Completions(Completer):
         text = session.prompt()
         return text
 
-# Null pattern, this method prevents readline
-# from trying to tab complete files
-def null_completer(text, state):
-    return None
-
 class CLI(ui_interface.UI):
     def uiFeedback(self, text: str):
         print(text)
