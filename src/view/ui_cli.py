@@ -1,15 +1,16 @@
-import readline
-
 from . import ui_interface
 from model.relationship_model import Type
 from model.command_model import *
 from .singleton import Singleton
 
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import Completer, Completion
+
 # Class that will hold the list of words that the command line
 # can auto complete to. This is only relevant to the CLI so
 # the code lives here for now.
 @Singleton
-class Completions:
+class Completions(Completer):
     def __init__(self):
         self.tab_completions = []
 
@@ -49,32 +50,26 @@ class Completions:
                 self.set_tab_completions([])
         else:
             self.set_tab_completions([])
+    
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor
+        matches = [option for option in self.tab_completions if option.startswith(text)]
+        for m in matches:
+            yield Completion(m, -len(text))
 
     # Set tab completions
     def activate(self):
-        readline.set_completer(list_completer)
+        pass
 
     # Disable tab completions
     def deactivate(self):
-        readline.set_completer(null_completer)
+        pass
     
     # Similar to python's `input()` except it automatically manages tab completions
     def tab_input(self, prompt) -> str:
-        self.activate()
-        text = input(prompt)
-        self.deactivate()
+        session = PromptSession(prompt, completer=self, complete_while_typing=False)
+        text = session.prompt()
         return text
-
-def list_completer(text, state):
-    # Retrieve the completions we put into the singleton
-    options = Completions.instance().get_tab_completions()
-
-    # This will use the global singleton, which can be modified
-    matches = [x for x in options if x.startswith(text)]
-    try:
-        return matches[state]
-    except IndexError:
-        return None
 
 # Null pattern, this method prevents readline
 # from trying to tab complete files
@@ -82,9 +77,6 @@ def null_completer(text, state):
     return None
 
 class CLI(ui_interface.UI):
-    def __init__(self):
-        readline.parse_and_bind('tab: complete')
-
     def uiFeedback(self, text: str):
         print(text)
 
