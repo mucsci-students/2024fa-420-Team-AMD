@@ -82,7 +82,8 @@ class testEditor(unittest.TestCase):
         ctrl.editor.classes['Foo'] = Class('Foo')
         ctrl.editor.classes['Bar'] = Class('Bar')
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
-        assert Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships, 'Relationship was not added successfully'
+        b1 = ctrl.editor.relationships[('Foo', 'Bar')] == Relationship('Foo', 'Bar', Type.Aggregate) if ctrl.editor.relationships[('Foo', 'Bar')] else False
+        assert b1, 'Relationship was not added successfully'
 
     # Failure due to already existing relationship
     def testRelationshipAddFailure1(self):
@@ -95,7 +96,8 @@ class testEditor(unittest.TestCase):
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
 
         ctrl.relationshipAdd('Bar', 'Foo', Type.Aggregate)
-        assert Relationship('Bar', 'Foo', Type.Aggregate) not in ctrl.editor.relationships, 'Duplication was not checked for'
+        b1 = ('Bar', 'Foo') not in ctrl.editor.relationships
+        assert b1, 'Duplication was not checked for'
 
     # Failure due to missing class
     def testRelationshipAddFailure2(self):
@@ -105,7 +107,8 @@ class testEditor(unittest.TestCase):
 
         ctrl.editor.classes['Foo'] = Class('Foo')
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
-        assert Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships, 'Class was not checked for existence'
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        assert b1, 'Class was not checked for existence'
 
     def testRelationshipDeleteSuccess(self):
         editor = Editor()
@@ -117,7 +120,8 @@ class testEditor(unittest.TestCase):
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
 
         ctrl.relationshipDelete('Foo', 'Bar')
-        assert Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship was not deleted'
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        assert b1, 'Relationship was not deleted'
 
     # Failure due to no relationship
     def testRelationshipDeleteFailure1(self):
@@ -129,7 +133,8 @@ class testEditor(unittest.TestCase):
         ctrl.editor.classes['Bar'] = Class('Bar')
 
         ctrl.relationshipDelete('Foo', 'Bar')
-        assert Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship should not have been removed'
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        assert b1, 'Relationship should not have been removed'
 
     # Failure due to missing classes
     def testRelationshipDeleteFailure2(self):
@@ -142,7 +147,9 @@ class testEditor(unittest.TestCase):
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
 
         ctrl.relationshipDelete('Foo', 'Baz')
-        assert Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships and Relationship('Foo', 'Baz', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship should not have been removed'
+        b1 = ctrl.editor.relationships[('Foo', 'Bar')] == Relationship('Foo', 'Bar', Type.Aggregate) if ctrl.editor.relationships[('Foo', 'Bar')] else False
+        b2 = ('Foo', 'Baz') not in ctrl.editor.relationships
+        assert b1 and b2, 'Relationship should not have been removed'
 
     def testRelationshipEditSuccess(self):
         editor = Editor()
@@ -155,8 +162,8 @@ class testEditor(unittest.TestCase):
 
         ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
         
-        b1 = Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships
-        b2 = Relationship('Foo', 'Bar', Type.Inheritance) in ctrl.editor.relationships
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        b2 = ctrl.editor.relationships[('Foo', 'Bar')] == Relationship('Foo', 'Bar', Type.Inheritance) if ctrl.editor.relationships[('Foo', 'Bar')] else False
         assert b1 and b2, 'Relationship was not edited successfully'
 
     # Failure due to no change
@@ -171,7 +178,9 @@ class testEditor(unittest.TestCase):
 
         ctrl.relationshipEdit('Foo', 'Bar', Type.Aggregate)
         
-        b1 = Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships
+        # Ternary operator, check the starting expression only if
+        # the relationship is in the map in the first place
+        b1 = ctrl.editor.relationships[('Foo', 'Bar')] == Relationship('Foo', 'Bar', Type.Aggregate) if ctrl.editor.relationships[('Foo', 'Bar')] else False
         assert b1, 'Relationship was edited when not supposed to'
 
     # Failure due to no relationship
@@ -185,7 +194,7 @@ class testEditor(unittest.TestCase):
 
         ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
         
-        b1 = Relationship('Foo', 'Bar', Type.Inheritance) not in ctrl.editor.relationships
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
         assert b1, 'Relationship should not have manifested from nothing'
 
     # Failure due to no class
@@ -198,7 +207,7 @@ class testEditor(unittest.TestCase):
 
         ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
         
-        b1 = Relationship('Foo', 'Bar', Type.Inheritance) not in ctrl.editor.relationships
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
         assert b1, 'Relationship should not have manifested from nothing'
 
     def testAddFieldSuccess(self):

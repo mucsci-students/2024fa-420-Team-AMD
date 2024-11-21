@@ -204,9 +204,9 @@ class EditorController:
             del self.editor.classes[name]
             # Deleting relationships that are no longer valid after class deletion
             toRemove = []
-            for rel in self.editor.relationships:
-                if name == rel.src or name == rel.dst:
-                    toRemove.append(rel)
+            for (src, dst) in self.editor.relationships:
+                if name == src or name == dst:
+                    toRemove.append((src, dst))
             for rel in toRemove:
                 self.editor.relationships.discard(rel)
                 
