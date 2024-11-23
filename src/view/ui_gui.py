@@ -291,10 +291,10 @@ class GUI(ui_interface.UI):
         button_save = tk.Button(self.toolbar, name="help", text="Help", command=lambda: self.showHelp()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_undo = tk.Button(self.toolbar, name="undo", text="Undo", command=lambda: self.controller.stepCmd(True))
+        button_undo = tk.Button(self.toolbar, name="undo", text="Undo", command=lambda: self.controller.undo())
         button_undo.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_redo = tk.Button(self.toolbar, name="redo", text="Redo", command=lambda: self.controller.stepCmd(False))
+        button_redo = tk.Button(self.toolbar, name="redo", text="Redo", command=lambda: self.controller.redo())
         button_redo.pack(side=tk.LEFT, padx=2, pady=2)
     
     def updateAccess(self):
@@ -324,6 +324,20 @@ class GUI(ui_interface.UI):
             b.config(state=tk.NORMAL)
         else:
             b = self.toolbar.nametowidget("relationships")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canUndo():
+            b = self.toolbar.nametowidget("undo")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("undo")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canRedo():
+            b = self.toolbar.nametowidget("redo")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("redo")
             b.config(state=tk.DISABLED)
 
 

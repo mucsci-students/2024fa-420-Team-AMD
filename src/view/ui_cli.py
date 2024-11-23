@@ -106,9 +106,9 @@ class CLI(ui_interface.UI):
                 case 'load':
                     controller.load()
                 case 'undo':
-                    controller.stepCmd(True)
+                    controller.undo()
                 case 'redo':
-                    controller.stepCmd(False)
+                    controller.redo()
                 case 'list':
                     self.listCommands(controller)
                 case 'help':
