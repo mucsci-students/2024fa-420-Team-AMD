@@ -710,7 +710,6 @@ class testEditor(unittest.TestCase):
         b1 = Method('run') in ctrl.editor.classes['Foo'].methods
         assert b1, 'Redo did not reapply the latest undo'
 
-<<<<<<< HEAD
     def testUndoBlank(self):
         editor = Editor()
         ui = CLI()
@@ -721,9 +720,6 @@ class testEditor(unittest.TestCase):
         assert b1, 'Empty undo still moved the cursor'
 
     def testRedoTop(self):
-=======
-    def testRedo2(self):
->>>>>>> 39deafbb795f03a83fa97e89706de138d14961d8
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
@@ -736,11 +732,23 @@ class testEditor(unittest.TestCase):
         cmd2.execute(ctrl)
         editor.pushCmd(cmd2)
 
-<<<<<<< HEAD
         ctrl.stepCmd(False) # Redo
         b1 = Method('run') in ctrl.editor.classes['Foo'].methods
         assert b1, 'Redo altered the state of the program'
-=======
+
+    def testRedo2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        cmd1 = CommandClassAdd('Foo')
+        cmd1.execute(ctrl)
+        editor.pushCmd(cmd1)
+
+        cmd2 = CommandMethodAdd('Foo', 'run', ['a', 'b', 'c'])
+        cmd2.execute(ctrl)
+        editor.pushCmd(cmd2)
+
         cmd3 = CommandClassAdd('Baz')
         cmd3.execute(ctrl)
         editor.pushCmd(cmd3)
@@ -751,5 +759,3 @@ class testEditor(unittest.TestCase):
         b1 = Method('run') in ctrl.editor.classes['Foo'].methods
         b2 = 'Baz' not in ctrl.editor.classes
         assert b1 and b2, 'Redo failed on double undo'
-
->>>>>>> 39deafbb795f03a83fa97e89706de138d14961d8
