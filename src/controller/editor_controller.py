@@ -86,7 +86,7 @@ class EditorController:
         if not filename:
             self.ui.uiError("Save operation canceled.")
             return
-
+          
         memento = Memento(self.editor, self.ui)
         memento.save_to_file(f"{filename}")
 
