@@ -86,7 +86,7 @@ class EditorController:
             return
 
         memento = Memento(self.editor, self.ui)
-        memento.save_to_file(f"{filename}.json")
+        memento.save_to_file(f"{filename}")
 
     def loadGUI(self):
         filename = self.ui.uiChooseLoadLocation()
