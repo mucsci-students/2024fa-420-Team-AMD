@@ -53,9 +53,10 @@ class EditorController:
                 self.ui.uiError(f'Could not load from `{filename}`')
             return
 
-        if isinstance(self.ui, GUI):
-            # Suppress popups as we load from JSON
-            self.ui.silent_mode = True
+        # We no longer use load() from the GUI
+        # if isinstance(self.ui, GUI):
+        #     # Suppress popups as we load from JSON
+        #     self.ui.silent_mode = True
 
         with open(filename, 'r') as f:
             data = f.read()
@@ -73,18 +74,19 @@ class EditorController:
                 self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
                         
         self.ui.uiFeedback(f'=--> Loaded from {filename}!')
-        if isinstance(self.ui, GUI):
-            # Recalculate grayed out buttons
-            self.ui.updateAccess()
-            # No longer suppress popups
-            self.ui.silent_mode = False
+        # We no longer use load() from the GUI
+        # if isinstance(self.ui, GUI):
+        #     # Recalculate grayed out buttons
+        #     self.ui.updateAccess()
+        #     # No longer suppress popups
+        #     self.ui.silent_mode = False
 
     def saveGUI(self):
         filename = self.ui.uiChooseSaveLocation()
         if not filename:
             self.ui.uiError("Save operation canceled.")
             return
-
+          
         memento = Memento(self.editor, self.ui)
         memento.save_to_file(f"{filename}")
 

@@ -1,16 +1,15 @@
+import prompt_toolkit
+
 from . import ui_interface
 from model.relationship_model import Type
 from model.command_model import *
 from .singleton import Singleton
 
-from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import Completer, Completion
-
 # Class that will hold the list of words that the command line
 # can auto complete to. This is only relevant to the CLI so
 # the code lives here for now.
 @Singleton
-class Completions(Completer):
+class Completions(prompt_toolkit.completion.Completer):
     def __init__(self):
         self.tab_completions = []
 
@@ -55,11 +54,11 @@ class Completions(Completer):
         text = document.text_before_cursor
         matches = [option for option in self.tab_completions if option.startswith(text)]
         for m in matches:
-            yield Completion(m, -len(text))
+            yield prompt_toolkit.completion.Completion(m, -len(text))
     
     # Similar to python's `input()` except it automatically manages tab completions
     def tab_input(self, prompt) -> str:
-        session = PromptSession(prompt, completer=self, complete_while_typing=False)
+        session = prompt_toolkit.PromptSession(prompt, completer=self, complete_while_typing=False)
         text = session.prompt()
         return text
 
