@@ -5,6 +5,7 @@ from model.relationship_model import Type, Relationship
 from model.command_model import *
 from controller.editor_controller import EditorController
 from view.ui_cli import CLI
+from view.ui_gui import GUI
 
 class testEditor(unittest.TestCase):
 
@@ -687,7 +688,7 @@ class testEditor(unittest.TestCase):
         cmd2.execute(ctrl)
         editor.pushCmd(cmd2)
 
-        ctrl.stepCmd(True) # Undo
+        ctrl.undo()
         b1 = Method('run') not in ctrl.editor.classes['Foo'].methods
         assert b1, 'Undo did not revert the latest change'
 
@@ -704,8 +705,8 @@ class testEditor(unittest.TestCase):
         cmd2.execute(ctrl)
         editor.pushCmd(cmd2)
 
-        ctrl.stepCmd(True) # Undo
-        ctrl.stepCmd(False) # Redo
+        ctrl.undo()
+        ctrl.redo()
         b1 = Method('run') in ctrl.editor.classes['Foo'].methods
         assert b1, 'Redo did not reapply the latest undo'
 
@@ -734,3 +735,27 @@ class testEditor(unittest.TestCase):
         ctrl.stepCmd(False) # Redo
         b1 = Method('run') in ctrl.editor.classes['Foo'].methods
         assert b1, 'Redo altered the state of the program'
+      
+    def testRedo2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        cmd1 = CommandClassAdd('Foo')
+        cmd1.execute(ctrl)
+        editor.pushCmd(cmd1)
+
+        cmd2 = CommandMethodAdd('Foo', 'run', ['a', 'b', 'c'])
+        cmd2.execute(ctrl)
+        editor.pushCmd(cmd2)
+
+        cmd3 = CommandClassAdd('Baz')
+        cmd3.execute(ctrl)
+        editor.pushCmd(cmd3)
+
+        ctrl.undo()
+        ctrl.undo()
+        ctrl.redo()
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        b2 = 'Baz' not in ctrl.editor.classes
+        assert b1 and b2, 'Redo failed on double undo'

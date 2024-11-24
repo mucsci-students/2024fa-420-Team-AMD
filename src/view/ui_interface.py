@@ -50,3 +50,6 @@ class UI:
     
     def updateAttributesBox(self, class1: str):
         pass
+
+    def uiChooseCanvasLocation(self) -> str:
+        pass
