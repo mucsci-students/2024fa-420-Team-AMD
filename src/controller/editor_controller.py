@@ -39,9 +39,10 @@ class EditorController:
                 self.ui.uiError(f'Could not load from `{filename}`')
             return
 
-        if isinstance(self.ui, GUI):
-            # Suppress popups as we load from JSON
-            self.ui.silent_mode = True
+        # We no longer use load() from the GUI
+        # if isinstance(self.ui, GUI):
+        #     # Suppress popups as we load from JSON
+        #     self.ui.silent_mode = True
 
         with open(filename, 'r') as f:
             data = f.read()
@@ -59,19 +60,21 @@ class EditorController:
                 self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
                         
         self.ui.uiFeedback(f'=--> Loaded from {filename}!')
-        if isinstance(self.ui, GUI):
-            # Recalculate grayed out buttons
-            self.ui.updateAccess()
-            # No longer suppress popups
-            self.ui.silent_mode = False
+        # We no longer use load() from the GUI
+        # if isinstance(self.ui, GUI):
+        #     # Recalculate grayed out buttons
+        #     self.ui.updateAccess()
+        #     # No longer suppress popups
+        #     self.ui.silent_mode = False
 
     def saveGUI(self):
         filename = self.ui.uiChooseSaveLocation()
         # For an empty filename (sent on GUI 'Cancel') do nothing
         if not filename:
-            # If it's the CLI, give clear output
-            if isinstance(self.ui, CLI):
-                self.ui.uiError(f'Could not save to `{filename}`')
+            # Not used by the CLI
+            # # If it's the CLI, give clear output
+            # if isinstance(self.ui, CLI):
+            #     self.ui.uiError(f'Could not save to `{filename}`')
             return
         
         # Prepare the list of classes with positions embedded as part of each class object
@@ -114,18 +117,19 @@ class EditorController:
         }
             
         # Write to the JSON file
-        with open(f'{filename}.JSON', 'w') as f:
+        with open(f'{filename}', 'w') as f:
             json.dump(output, f, indent=4)
-            self.ui.uiFeedback(f'Saved to {filename}.JSON!')
+            self.ui.uiFeedback(f'Saved to {filename}!')
 
     
     def loadGUI(self):
         filename = self.ui.uiChooseLoadLocation()
         # For an empty filename (sent on GUI 'Cancel') do nothing
         if not filename:
-            # If it's the CLI, give clear output
-            if isinstance(self.ui, CLI):
-                self.ui.uiError(f'Could not load from `{filename}`')
+            # Not used by the CLI
+            # # If it's the CLI, give clear output
+            # if isinstance(self.ui, CLI):
+            #     self.ui.uiError(f'Could not load from `{filename}`')
             return
 
         self.ui.silent_mode = True
@@ -164,6 +168,7 @@ class EditorController:
                 self.ui.uiFeedback(f'Loaded from {filename}!')
         finally:
             self.ui.silent_mode = False
+            self.ui.updateAccess()
 
     # Function for Undo/Redo
     # Steps through the command stack in different directions depending on the command
@@ -208,7 +213,7 @@ class EditorController:
                 if name == src or name == dst:
                     toRemove.append((src, dst))
             for rel in toRemove:
-                self.editor.relationships.discard(rel)
+                del self.editor.relationships[rel]
                 
             self.ui.uiFeedback(f'Deleted class {name}!')
             self.ui.deleteClassBox(name)
