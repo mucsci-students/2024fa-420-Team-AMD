@@ -82,3 +82,13 @@ These can also be run from the central `test.py` file in `src/`.
     (env) $ cd 2024fa-420-Team-AMD
     (env) $ python src/test.py
 ```
+
+## Design Patterns Used
+
+We have used 6 design patterns in total. Click to see where they are used in the source code. They are as follows:
+- [MVC](src/)
+- [Command](src/model/command_model.py)
+- [Singleton (Completions)](src/view/ui_cli.py)
+- [State (can_undo/can_redo)](src/controller/editor_controller.py)
+- [Memento](src/controller/memento.py)
+- ?
