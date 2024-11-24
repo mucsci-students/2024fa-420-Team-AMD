@@ -5,6 +5,7 @@ from model.relationship_model import Relationship, Type
 from controller.memento import Memento
 from view.ui_cli import CLI
 from view.ui_gui import GUI
+from PIL import Image
 
 # Controller for the Editor class
 # Most functions return a boolean to indicate that an action
@@ -16,6 +17,18 @@ class EditorController:
     def __init__(self, ui, editor):
         self.ui = ui
         self.editor = editor
+    
+    def export_image(self):
+        file_name = self.ui.uiChooseCanvasLocation()
+        # For an empty filename (sent on GUI 'Cancel') do nothing
+        if not file_name:
+            return
+        
+        # Saves canvas as a postscript file and then uses Image  to turn it into an image
+        self.ui.canvas.postscript(file='canvas.eps')
+        img = Image.open('canvas.eps')
+        img.convert()
+        img.save(file_name + '.png', 'png')
     
     def save(self):
         filename = self.ui.uiChooseSaveLocation()

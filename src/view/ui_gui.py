@@ -296,6 +296,9 @@ class GUI(ui_interface.UI):
 
         button_redo = tk.Button(self.toolbar, name="redo", text="Redo", command=lambda: self.controller.redo())
         button_redo.pack(side=tk.LEFT, padx=2, pady=2)
+
+        button_export = tk.Button(self.toolbar, name="export image", text="Export Image", command=lambda: self.controller.export_image())
+        button_export.pack(side=tk.LEFT, padx=2, pady=2)
     
     def updateAccess(self):
         if self.controller.editor.canAddField():
@@ -886,6 +889,10 @@ class GUI(ui_interface.UI):
 
     # -------------- DIAGNOSTIC FUNCTIONS START ----------------------------------------------------------------
 
+    def uiChooseCanvasLocation(self) -> str:
+        filename = filedialog.asksaveasfilename(title="Select a File", filetypes=[('PNG files', '*.png')])
+        return filename
+    
     def uiChooseSaveLocation(self) -> str:
         filename = tk.filedialog.asksaveasfilename(title="Select a File", filetypes=[("JSON files", "*.JSON")])
         return filename
