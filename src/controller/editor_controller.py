@@ -2,6 +2,7 @@ import json
 from model.class_model import Class, Field, Method
 from model.editor_model import EditorEncoder
 from model.relationship_model import Relationship, Type
+from controller.memento import Memento
 from view.ui_cli import CLI
 from view.ui_gui import GUI
 
@@ -67,103 +68,21 @@ class EditorController:
 
     def saveGUI(self):
         filename = self.ui.uiChooseSaveLocation()
-        # For an empty filename (sent on GUI 'Cancel') do nothing
         if not filename:
-            # If it's the CLI, give clear output
-            if isinstance(self.ui, CLI):
-                self.ui.uiError(f'Could not save to `{filename}`')
+            self.ui.uiError("Save operation canceled.")
             return
-        
-        # Prepare the list of classes with positions embedded as part of each class object
-        classes_with_positions = []
-        for class_name, class_obj in self.editor.classes.items():
-            fields = [{'name': field.name} for field in class_obj.fields]  #REMEMBER TO ADD TYPES
-            methods = [{'name': method.name,   #REMEMVER TO ADD RETURN TYPES AND PARAM TYPES
-                        'params': [{'name': param} if isinstance(param, str) else {'name': param.name}
-                                for param in method.params]}
-                    for method in class_obj.methods]
-            
-            # Retrieve position from box_positions and add it to the class object
-            position = self.ui.box_positions.get(class_name, {}).get('position', (0, 0))
-            class_data = {
-                'name': class_name,
-                'fields': fields,
-                'methods': methods,
-                'position': {'x': position[0], 'y': position[1]}  # Embed position as x, y coordinates
-            }
-            classes_with_positions.append(class_data)
 
-        # Collect relationship data to save
-        relationships = []
-        for (class1, class2), (line, shape) in self.ui.relationship_lines.items():
+        memento = Memento(self.editor, self.ui)
+        memento.save_to_file(f"{filename}.json")
 
-            relationship_type = self.editor.getRelationshipType(class1, class2)  
-            if relationship_type is not None:
-                relationships.append({
-                    "source": class1,
-                    "destination": class2,
-                    "type": relationship_type.name 
-                })
-            else:
-                print(f"Warning: Relationship between {class1} and {class2} not found in editor.")
-
-        # Prepare the final JSON output
-        output = {
-            "classes": classes_with_positions,
-            "relationships": relationships
-        }
-            
-        # Write to the JSON file
-        with open(f'{filename}.JSON', 'w') as f:
-            json.dump(output, f, indent=4)
-            self.ui.uiFeedback(f'Saved to {filename}.JSON!')
-
-    
     def loadGUI(self):
         filename = self.ui.uiChooseLoadLocation()
-        # For an empty filename (sent on GUI 'Cancel') do nothing
         if not filename:
-            # If it's the CLI, give clear output
-            if isinstance(self.ui, CLI):
-                self.ui.uiError(f'Could not load from `{filename}`')
+            self.ui.uiError("Load operation canceled.")
             return
 
-        self.ui.silent_mode = True
-
-        try:
-            with open(filename, 'r') as f:
-                data = json.load(f)
-                
-                # Load classes, fields, methods, and positions
-                for clazz in data['classes']:
-                    name = clazz['name']
-                    self.classAdd(name)
-
-                    # Add fields
-                    for attr in clazz.get('fields', []):
-                        self.addField(name, attr['name'])
-
-                    # Add methods
-                    for method in clazz.get('methods', []):
-                        params = [p['name'] for p in method.get('params', [])]
-                        self.addMethod(name, method['name'], params)
-
-                    # Set position if it exists
-                    if 'position' in clazz:
-                        x, y = clazz['position']['x'], clazz['position']['y']
-                        self.ui.updateBoxPosition(name, x, y)  # Position the class box
-
-                # Load relationships
-                for rel in data['relationships']:
-                    self.relationshipAdd(rel['source'], rel['destination'], Type.make(rel['type'].lower()))
-
-                # Update relationship lines after setting box positions
-                for (class1, class2), _ in self.ui.relationship_lines.items():
-                    self.ui.updateRelationshipLines(class1)
-
-                self.ui.uiFeedback(f'Loaded from {filename}!')
-        finally:
-            self.ui.silent_mode = False
+        memento = Memento(self.editor, self.ui)
+        memento.load_from_file(filename)
     
     def undo(self):
         self.stepCmd(True)
@@ -239,7 +158,7 @@ class EditorController:
                 if name == src or name == dst:
                     toRemove.append((src, dst))
             for rel in toRemove:
-                self.editor.relationships.discard(rel)
+                self.editor.relationships.pop(rel, None)
                 
             self.ui.uiFeedback(f'Deleted class {name}!')
             self.ui.deleteClassBox(name)

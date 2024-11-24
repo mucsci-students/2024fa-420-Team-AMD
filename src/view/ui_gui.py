@@ -429,15 +429,16 @@ class GUI(ui_interface.UI):
             for text_method in text_methods:  # Delete all the fields text
                 self.canvas.delete(text_method)
 
-            # Remove any relationship lines connected to this class
-            to_delete = []
-            for (class1, class2) in self.relationship_lines.keys():
-                if class1 == class_name or class2 == class_name:
-                    self.deleteRelationshipLine(class1, class2)
-                    to_delete.append((class1, class2))
-            
-            for key in to_delete:
-                del self.relationship_lines[key]
+            # Collect relationships to delete
+            to_delete = [
+                (class1, class2) for (class1, class2) in self.relationship_lines.keys()
+                if class1 == class_name or class2 == class_name
+            ]
+
+            # Safely delete relationships
+            for (class1, class2) in to_delete:
+                self.deleteRelationshipLine(class1, class2)
+                self.relationship_lines.pop((class1, class2), None)
 
             # Remove the class from the dictionary
             del self.box_positions[class_name]
