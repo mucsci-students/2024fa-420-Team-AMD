@@ -83,28 +83,58 @@ class EditorController:
 
         memento = Memento(self.editor, self.ui)
         memento.load_from_file(filename)
+    
+    def undo(self):
+        self.stepCmd(True)
 
+    def redo(self):
+        self.stepCmd(False)
 
-    # Function for Undo/Redo
+    # Implementation function for Undo/Redo
     # Steps through the command stack in different directions depending on the command
     def stepCmd(self, undo: bool):
         if len(self.editor.action_stack) == 0:
             self.ui.uiError('No actions have been performed yet')
             return
         if undo:
-            self.editor.action_stack[self.editor.action_idx].undo(self)
-            if self.editor.action_idx > 0:
+            # We allow the action idx to go to -1 so that the very first command
+            # is not skipped when doing redo
+            if self.editor.action_idx > -1:
+                self.editor.action_stack[self.editor.action_idx].undo(self)
                 self.editor.action_idx -= 1
+                if self.editor.action_idx >= 0:
+                    # If we did not undo the first command, we have commands we can still undo
+                    self.editor.can_undo = True
+                else:
+                    # If we did undo the first command, we can no longer undo
+                    self.editor.can_undo = False
+                # By undoing any command, we can redo
+                self.editor.can_redo = True
+            else:
+                # If we did undo the first command, we can no longer undo
+                self.editor.can_undo = False
         else:
             self.editor.action_idx += 1
             if self.editor.action_idx >= len(self.editor.action_stack):
+                # If we are past the latest command, there is nothing left to redo
                 self.editor.action_idx = len(self.editor.action_stack) - 1
-            self.editor.action_stack[self.editor.action_idx].execute(self)
+                self.editor.can_redo = False
+            else:
+                self.editor.action_stack[self.editor.action_idx].execute(self)
+                if self.editor.action_idx == len(self.editor.action_stack) - 1:
+                    # If we just now called redo on the latest command, there is nothing left to redo
+                    self.editor.can_redo = False
+                else:
+                    # Otherwise, there is more we can redo
+                    self.editor.can_redo = True
+                # By redoing any command, we can undo
+                self.editor.can_undo = True
         # Recalculate grayed out buttons
         self.ui.updateAccess()
     
     def pushCmd(self, cmd):
         self.editor.pushCmd(cmd)
+        self.editor.can_undo = True
         # Recalculate grayed out buttons
         self.ui.updateAccess()
 
