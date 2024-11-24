@@ -8,6 +8,8 @@ class Editor:
         self.relationships = {}
         self.action_stack = []
         self.action_idx = 0
+        self.can_undo = False
+        self.can_redo = False
     
     def getClasses(self):
         ls = [c for c in self.classes]
@@ -38,6 +40,12 @@ class Editor:
 
     def canAddRelationship(self):
         return len(self.classes) > 1
+
+    def canUndo(self):
+        return self.can_undo
+
+    def canRedo(self):
+        return self.can_redo
 
     #===== Command Stack =====#
     
