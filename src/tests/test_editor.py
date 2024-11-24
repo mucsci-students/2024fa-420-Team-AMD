@@ -5,6 +5,7 @@ from model.relationship_model import Type, Relationship
 from model.command_model import *
 from controller.editor_controller import EditorController
 from view.ui_cli import CLI
+from view.ui_gui import GUI
 
 class testEditor(unittest.TestCase):
     
@@ -493,3 +494,4 @@ class testEditor(unittest.TestCase):
         b1 = Method('run') in ctrl.editor.classes['Foo'].methods
         b2 = 'Baz' not in ctrl.editor.classes
         assert b1 and b2, 'Redo failed on double undo'
+
