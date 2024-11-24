@@ -21,7 +21,7 @@ To get started, clone the repo.
     $ git clone https://github.com/mucsci-students/2024fa-420-Team-AMD.git
 ```
 
-Make sure you have [Python](https://www.python.org/) and [pip](https://pypi.org/project/pip/) installed on your system. Install [virtualenv](https://pypi.org/project/virtualenv/) through pip.
+Make sure you have [Python](https://www.python.org/), [pip](https://pypi.org/project/pip/), and [GhostScript](https://ghostscript.com/releases/gsdnld.html) installed on your system. Install [virtualenv](https://pypi.org/project/virtualenv/) through pip.
 
 ```console
     $ pip install virtualenv
