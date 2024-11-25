@@ -39,7 +39,7 @@ class testEditorController(unittest.TestCase):
 
     def testSaveGui(self):
         editor = Editor()
-        ui = GUI(None)
+        ui = GUI()
         ctrl = EditorController(ui, editor)
         ui.controller = ctrl
         ctrl.ui.uiFeedback = unittest.mock.Mock()
@@ -64,7 +64,7 @@ class testEditorController(unittest.TestCase):
 
     def testSaveGuiRelLineMismatch(self):
         editor = Editor()
-        ui = GUI(None)
+        ui = GUI()
         ctrl = EditorController(ui, editor)
         ui.controller = ctrl
         ctrl.ui.uiFeedback = unittest.mock.Mock()
@@ -98,7 +98,7 @@ class testEditorController(unittest.TestCase):
 
     def testSaveGuiEmpty(self):
         editor = Editor()
-        ui = GUI(None)
+        ui = GUI()
         ctrl = EditorController(ui, editor)
         ui.controller = ctrl
         ctrl.ui.uiFeedback = unittest.mock.Mock()
@@ -136,7 +136,7 @@ class testEditorController(unittest.TestCase):
 
     def testLoadGui(self):
         editor = Editor()
-        ui = GUI(None)
+        ui = GUI()
         ctrl = EditorController(ui, editor)
         ui.controller = ctrl
         ctrl.ui.uiFeedback = unittest.mock.Mock()
@@ -151,7 +151,7 @@ class testEditorController(unittest.TestCase):
 
     def testLoadGuiEmpty(self):
         editor = Editor()
-        ui = GUI(None)
+        ui = GUI()
         ctrl = EditorController(ui, editor)
         ui.controller = ctrl
         ctrl.ui.uiFeedback = unittest.mock.Mock()
@@ -166,7 +166,7 @@ class testEditorController(unittest.TestCase):
 
     def testPushCmd1(self):
         editor = Editor()
-        ui = GUI(None)
+        ui = GUI()
         ctrl = EditorController(ui, editor)
         ui.controller = ctrl
         ctrl.ui.uiFeedback = unittest.mock.Mock()
@@ -195,7 +195,7 @@ class testEditorController(unittest.TestCase):
 
     def testHelpGUI(self):
         editor = Editor()
-        ui = GUI(None)
+        ui = GUI()
         ctrl = EditorController(ui, editor)
         ui.controller = ctrl
         ctrl.ui.uiFeedback = unittest.mock.Mock()

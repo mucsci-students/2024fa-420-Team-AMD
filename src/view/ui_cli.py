@@ -77,7 +77,7 @@ class CLI(ui_interface.UI):
         filename = self.uiQuery('File Name to Open: ')
         return filename
         
-    def uiRun(self, controller):
+    def uiRun(self):
         print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
         
         # This is not an amazing solution, have to repeat changes
@@ -91,28 +91,28 @@ class CLI(ui_interface.UI):
             command = command.strip()
             match command:
                 case 'class':
-                    self.classCommands(controller)
+                    self.classCommands(self.controller)
                 case 'relationship':
-                    self.relationshipCommands(controller)
+                    self.relationshipCommands(self.controller)
                 case 'field':
-                    self.fieldCommands(controller)
+                    self.fieldCommands(self.controller)
                 case 'method':
-                    self.methodCommands(controller)
+                    self.methodCommands(self.controller)
                 case 'parameter':
-                    self.parameterCommands(controller)
+                    self.parameterCommands(self.controller)
                 case 'save':
-                    controller.save()
+                    self.controller.save()
                 case 'load':
-                    controller.load()
+                    self.controller.load()
                 case 'undo':
-                    controller.undo()
+                    self.controller.undo()
                 case 'redo':
-                    controller.redo()
+                    self.controller.redo()
                 case 'list':
-                    self.listCommands(controller)
+                    self.listCommands(self.controller)
                 case 'help':
                     print('These are valid commands: class, relationship, field, method, parameter, save, load, undo, redo, list, switch, exit.')
-                    controller.editorHelp()
+                    self.controller.editorHelp()
                 case 'exit':
                     quit = True
                     break
