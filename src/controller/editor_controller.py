@@ -29,7 +29,6 @@ class EditorController:
         canvas_height = self.ui.canvas.winfo_height()
         self.ui.canvas.postscript(file='canvas.eps', pageheight=canvas_height * 2, pagewidth = canvas_width * 2)
         img = Image.open('canvas.eps')
-        img = Image.open('canvas.eps')
         img.convert()
         img.save(file_name + '.png', 'png')
     
