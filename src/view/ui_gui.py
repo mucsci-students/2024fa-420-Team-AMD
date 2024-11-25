@@ -8,8 +8,7 @@ import json
 import math
 
 class GUI(ui_interface.UI):
-    def __init__(self, controller):
-        self.controller = controller
+    def __init__(self):
         self.silent_mode = False
         self.root = tk.Tk()
         self.root.title("UML Program")

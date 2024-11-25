@@ -91,4 +91,4 @@ We have used 6 design patterns in total. Click to see where they are used in the
 - [Singleton (Completions)](src/view/ui_cli.py)
 - [State (can_undo/can_redo)](src/controller/editor_controller.py)
 - [Memento](src/controller/memento.py)
-- ?
+- [Builder](src/model/app_model.py)
