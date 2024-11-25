@@ -25,9 +25,7 @@ class EditorController:
             return
         
         # Saves canvas as a postscript file and then uses Image  to turn it into an image
-        canvas_width = self.ui.canvas.winfo_width()
-        canvas_height = self.ui.canvas.winfo_height()
-        self.ui.canvas.postscript(file='canvas.eps', pageheight=canvas_height * 2, pagewidth = canvas_width * 2)
+        self.ui.canvas.postscript(file='canvas.eps')
         img = Image.open('canvas.eps')
         img.convert()
         img.save(file_name + '.png', 'png')
