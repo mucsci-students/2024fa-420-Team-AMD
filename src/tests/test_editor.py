@@ -5,8 +5,26 @@ from model.relationship_model import Type, Relationship
 from model.command_model import *
 from controller.editor_controller import EditorController
 from view.ui_cli import CLI
+from view.ui_gui import GUI
 
 class testEditor(unittest.TestCase):
+
+    def testClassAddSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        assert 'Foo' in ctrl.editor.classes, 'Foo was not added'
+
+    def testClassAddFailure(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.classAdd('Foo')
+        assert 'Foo' in ctrl.editor.classes, 'Foo was still added'
     
     def testClassDeleteSuccess(self):
         editor = Editor()
@@ -14,8 +32,10 @@ class testEditor(unittest.TestCase):
         ctrl = EditorController(ui, editor)
 
         ctrl.editor.classes['Foo'] = Class('Foo')
+        ctrl.classAdd('Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
         ctrl.classDelete('Foo')
-        assert ctrl.editor.classes == {}, 'Foo was not deleted'
+        assert 'Foo' not in ctrl.editor.classes, 'Foo was not deleted'
 
     def testClassDeleteFailure(self):
         editor = Editor()
@@ -82,7 +102,8 @@ class testEditor(unittest.TestCase):
         ctrl.editor.classes['Foo'] = Class('Foo')
         ctrl.editor.classes['Bar'] = Class('Bar')
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
-        assert Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships, 'Relationship was not added successfully'
+        b1 = ctrl.editor.relationships[('Foo', 'Bar')] == Relationship('Foo', 'Bar', Type.Aggregate) if ctrl.editor.relationships[('Foo', 'Bar')] else False
+        assert b1, 'Relationship was not added successfully'
 
     # Failure due to already existing relationship
     def testRelationshipAddFailure1(self):
@@ -95,7 +116,8 @@ class testEditor(unittest.TestCase):
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
 
         ctrl.relationshipAdd('Bar', 'Foo', Type.Aggregate)
-        assert Relationship('Bar', 'Foo', Type.Aggregate) not in ctrl.editor.relationships, 'Duplication was not checked for'
+        b1 = ('Bar', 'Foo') not in ctrl.editor.relationships
+        assert b1, 'Duplication was not checked for'
 
     # Failure due to missing class
     def testRelationshipAddFailure2(self):
@@ -105,7 +127,41 @@ class testEditor(unittest.TestCase):
 
         ctrl.editor.classes['Foo'] = Class('Foo')
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
-        assert Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships, 'Class was not checked for existence'
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        assert b1, 'Class was not checked for existence'
+
+    # Failure due to missing class (2nd class)
+    def testRelationshipAddFailure3(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.editor.classes['Bar'] = Class('Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        assert b1, 'Class was not checked for existence'
+
+    def testRelationshipAddString(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.classAdd('Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', 'Inheritance')
+        b1 = ('Foo', 'Bar') in ctrl.editor.relationships
+        assert b1, 'String was not converted to type properly'
+
+    def testRelationshipAddStringFailure(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.classAdd('Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', 'Cool')
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        assert b1, 'String was not converted to type properly'
 
     def testRelationshipDeleteSuccess(self):
         editor = Editor()
@@ -117,7 +173,21 @@ class testEditor(unittest.TestCase):
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
 
         ctrl.relationshipDelete('Foo', 'Bar')
-        assert Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship was not deleted'
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        assert b1, 'Relationship was not deleted'
+
+    def testRelationshipDeleteInverseSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.editor.classes['Foo'] = Class('Foo')
+        ctrl.editor.classes['Bar'] = Class('Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
+
+        ctrl.relationshipDelete('Bar', 'Foo')
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        assert b1, 'Relationship was not deleted'
 
     # Failure due to no relationship
     def testRelationshipDeleteFailure1(self):
@@ -129,7 +199,8 @@ class testEditor(unittest.TestCase):
         ctrl.editor.classes['Bar'] = Class('Bar')
 
         ctrl.relationshipDelete('Foo', 'Bar')
-        assert Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship should not have been removed'
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
+        assert b1, 'Relationship should not have been removed'
 
     # Failure due to missing classes
     def testRelationshipDeleteFailure2(self):
@@ -142,7 +213,9 @@ class testEditor(unittest.TestCase):
         ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
 
         ctrl.relationshipDelete('Foo', 'Baz')
-        assert Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships and Relationship('Foo', 'Baz', Type.Aggregate) not in ctrl.editor.relationships, 'Relationship should not have been removed'
+        b1 = ctrl.editor.relationships[('Foo', 'Bar')] == Relationship('Foo', 'Bar', Type.Aggregate) if ctrl.editor.relationships[('Foo', 'Bar')] else False
+        b2 = ('Foo', 'Baz') not in ctrl.editor.relationships
+        assert b1 and b2, 'Relationship should not have been removed'
 
     def testRelationshipEditSuccess(self):
         editor = Editor()
@@ -155,9 +228,28 @@ class testEditor(unittest.TestCase):
 
         ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
         
-        b1 = Relationship('Foo', 'Bar', Type.Aggregate) not in ctrl.editor.relationships
-        b2 = Relationship('Foo', 'Bar', Type.Inheritance) in ctrl.editor.relationships
-        assert b1 and b2, 'Relationship was not edited successfully'
+        b2 = ctrl.editor.relationships[('Foo', 'Bar')] == Relationship('Foo', 'Bar', Type.Inheritance) if ctrl.editor.relationships[('Foo', 'Bar')] else False
+        assert b2, 'Relationship was not edited successfully'
+
+    # Failure due to invalid data (forced)
+    def testRelationshipEditFailureInvalidData(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.editor.classes['Foo'] = Class('Foo')
+        ctrl.editor.classes['Bar'] = Class('Bar')
+        ctrl.relationshipAdd('Foo', 'Bar', Type.Aggregate)
+        
+        # Invalid data
+        ctrl.editor.relationships[('Foo', 'Bar')] = unittest.mock.Mock()
+
+        ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
+        
+        # Ternary operator, check the starting expression only if
+        # the relationship is in the map in the first place
+        b1 = ctrl.editor.relationships[('Foo', 'Bar')] != Relationship('Foo', 'Bar', Type.Inheritance) if ctrl.editor.relationships[('Foo', 'Bar')] else False
+        assert b1, 'Relationship was edited when not supposed to'
 
     # Failure due to no change
     def testRelationshipEditFailure1(self):
@@ -171,7 +263,9 @@ class testEditor(unittest.TestCase):
 
         ctrl.relationshipEdit('Foo', 'Bar', Type.Aggregate)
         
-        b1 = Relationship('Foo', 'Bar', Type.Aggregate) in ctrl.editor.relationships
+        # Ternary operator, check the starting expression only if
+        # the relationship is in the map in the first place
+        b1 = ctrl.editor.relationships[('Foo', 'Bar')] == Relationship('Foo', 'Bar', Type.Aggregate) if ctrl.editor.relationships[('Foo', 'Bar')] else False
         assert b1, 'Relationship was edited when not supposed to'
 
     # Failure due to no relationship
@@ -185,11 +279,11 @@ class testEditor(unittest.TestCase):
 
         ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
         
-        b1 = Relationship('Foo', 'Bar', Type.Inheritance) not in ctrl.editor.relationships
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
         assert b1, 'Relationship should not have manifested from nothing'
 
     # Failure due to no class
-    def testRelationshipEditSuccess(self):
+    def testRelationshipEditFailure3(self):
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
@@ -198,7 +292,7 @@ class testEditor(unittest.TestCase):
 
         ctrl.relationshipEdit('Foo', 'Bar', Type.Inheritance)
         
-        b1 = Relationship('Foo', 'Bar', Type.Inheritance) not in ctrl.editor.relationships
+        b1 = ('Foo', 'Bar') not in ctrl.editor.relationships
         assert b1, 'Relationship should not have manifested from nothing'
 
     def testAddFieldSuccess(self):
@@ -231,6 +325,38 @@ class testEditor(unittest.TestCase):
 
         ctrl.addField('Foo', 'at')
         assert Field('at') in ctrl.editor.classes['Foo'].fields, 'duplication was not checked for'
+
+    def testDeleteFieldSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+
+        ctrl.addField('Foo', 'at')
+        ctrl.deleteField('Foo', 'at')
+        assert Field('at') not in ctrl.editor.classes['Foo'].fields, 'Field deleted from class'
+
+    def testDeleteFieldFailure1(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addField('Foo', 'at2')
+
+        ctrl.deleteField('Foo', 'at')
+        b1 = Field('at') not in ctrl.editor.classes['Foo'].fields
+        b2 = Field('at2') in ctrl.editor.classes['Foo'].fields
+        assert b1 and b2, 'Fields were modified incorrectly'
+
+    def testDeleteFieldFailure2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.deleteField('Foo', 'at')
+        assert 'Foo' not in ctrl.editor.classes, 'Fields were modified incorrectly'
 
     def testRenameFieldSuccess(self):
         editor = Editor()
@@ -329,6 +455,15 @@ class testEditor(unittest.TestCase):
         ctrl.deleteMethod('Foo', 'run')
         assert Method('run') not in ctrl.editor.classes['Foo'].methods, 'Method should not exist'
 
+    # Failure due to no class
+    def testDeleteMethodFailure2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.deleteMethod('Foo', 'run')
+        assert 'Foo' not in ctrl.editor.classes, 'Method should not exist'
+
     def testRenameMethodSuccess(self):
         editor = Editor()
         ui = CLI()
@@ -398,6 +533,76 @@ class testEditor(unittest.TestCase):
         b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['a', 'b', 'c']
         assert b1 and b2, 'Parameter was modified when they should not have'
 
+    def testRenameParameterFailure2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a', 'b', 'c'])
+
+        ctrl.renameParameter('Foo', 'walk', 'a', 'b')
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
+        b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['a', 'b', 'c']
+        assert b1 and b2, 'Parameter was modified when they should not have'
+
+    def testRenameParameterFailure3(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+
+        ctrl.renameParameter('Foo', 'walk', 'a', 'b')
+        assert 'Foo' not in ctrl.editor.classes, 'Parameter was modified when they should not have'
+
+    def testRemoveParameterSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a', 'b', 'c'])
+
+        ctrl.removeParameter('Foo', 'run', 'a')
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
+        b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['b', 'c']
+        assert b1 and b2, 'Parameter was not removed correctly'
+
+    def testRemoveParameterFailure1(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a', 'b', 'c'])
+
+        ctrl.removeParameter('Foo', 'run', 'd')
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
+        b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['a', 'b', 'c']
+        assert b1 and b2, 'Paremeter should not have been removed'
+
+    def testRemoveParameterFailure2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+
+        ctrl.removeParameter('Foo', 'run', 'd')
+        b1 = Method('run') not in ctrl.editor.classes['Foo'].methods
+        assert b1, 'Method should still not exist'
+
+    def testRemoveParameterFailure3(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.removeParameter('Foo', 'run', 'd')
+        assert 'Foo' not in ctrl.editor.classes, 'Class should still not exist'
+
     def testClearParametersSuccess(self):
         editor = Editor()
         ui = CLI()
@@ -412,7 +617,7 @@ class testEditor(unittest.TestCase):
         b2 = ctrl.editor.classes['Foo'].methods[idx].params == []
         assert b1 and b2, 'Parameters were not cleared'
 
-    def testClearParametersFailure(self):
+    def testClearParametersFailure1(self):
         editor = Editor()
         ui = CLI()
         ctrl = EditorController(ui, editor)
@@ -425,6 +630,50 @@ class testEditor(unittest.TestCase):
         idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
         b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['a', 'b', 'c']
         assert b1 and b2, 'Parameters were clared when they should not have'
+
+    def testClearParametersFailure2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.clearParameters('Foo', 'run')
+        assert 'Foo' not in ctrl.editor.classes, 'Parameters were clared when they should not have'
+
+    def testReplaceParametersSuccess(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a', 'b', 'c'])
+
+        ctrl.replaceParameters('Foo', 'run', ['d', 'e', 'f'])
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
+        b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['d', 'e', 'f']
+        assert b1 and b2, 'Parameters were not replaced'
+
+    def testReplaceParametersFailure1(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.classAdd('Foo')
+        ctrl.addMethod('Foo', 'run', ['a', 'b', 'c'])
+
+        ctrl.replaceParameters('Foo', 'walk', ['d', 'e', 'f'])
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        idx = ctrl.editor.classes['Foo'].methods.index(Method('run'))
+        b2 = ctrl.editor.classes['Foo'].methods[idx].params == ['a', 'b', 'c']
+        assert b1 and b2, 'Parameters were replaced when they should not have'
+
+    def testReplaceParametersFailure2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.replaceParameters('Foo', 'walk', ['d', 'e', 'f'])
+        assert 'Foo' not in ctrl.editor.classes, 'Parameters were replaced when they should not have'
 
     def testUndo(self):
         editor = Editor()
@@ -439,7 +688,7 @@ class testEditor(unittest.TestCase):
         cmd2.execute(ctrl)
         editor.pushCmd(cmd2)
 
-        ctrl.stepCmd(True) # Undo
+        ctrl.undo()
         b1 = Method('run') not in ctrl.editor.classes['Foo'].methods
         assert b1, 'Undo did not revert the latest change'
 
@@ -456,7 +705,57 @@ class testEditor(unittest.TestCase):
         cmd2.execute(ctrl)
         editor.pushCmd(cmd2)
 
-        ctrl.stepCmd(True) # Undo
-        ctrl.stepCmd(False) # Redo
+        ctrl.undo()
+        ctrl.redo()
         b1 = Method('run') in ctrl.editor.classes['Foo'].methods
         assert b1, 'Redo did not reapply the latest undo'
+
+    def testUndoBlank(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        ctrl.stepCmd(True) # Undo
+        b1 = ctrl.editor.action_idx == 0
+        assert b1, 'Empty undo still moved the cursor'
+
+    def testRedoTop(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        cmd1 = CommandClassAdd('Foo')
+        cmd1.execute(ctrl)
+        editor.pushCmd(cmd1)
+
+        cmd2 = CommandMethodAdd('Foo', 'run', ['a', 'b', 'c'])
+        cmd2.execute(ctrl)
+        editor.pushCmd(cmd2)
+
+        ctrl.stepCmd(False) # Redo
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        assert b1, 'Redo altered the state of the program'
+
+    def testRedo2(self):
+        editor = Editor()
+        ui = CLI()
+        ctrl = EditorController(ui, editor)
+
+        cmd1 = CommandClassAdd('Foo')
+        cmd1.execute(ctrl)
+        editor.pushCmd(cmd1)
+
+        cmd2 = CommandMethodAdd('Foo', 'run', ['a', 'b', 'c'])
+        cmd2.execute(ctrl)
+        editor.pushCmd(cmd2)
+
+        cmd3 = CommandClassAdd('Baz')
+        cmd3.execute(ctrl)
+        editor.pushCmd(cmd3)
+
+        ctrl.undo()
+        ctrl.undo()
+        ctrl.redo()
+        b1 = Method('run') in ctrl.editor.classes['Foo'].methods
+        b2 = 'Baz' not in ctrl.editor.classes
+        assert b1 and b2, 'Redo failed on double undo'

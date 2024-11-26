@@ -6,7 +6,7 @@ class Field:
     def __eq__(self, other):
         return self.name == other.name
 
-    def __hash__(self, other):
+    def __hash__(self):
         return hash((self.name))
 
 # Since no types are required, parameters are just stored as a list of strings
@@ -22,7 +22,7 @@ class Method:
     def __eq__(self, other):
         return self.name == other.name
 
-    def __hash__(self, other):
+    def __hash__(self):
         return hash((self.name))
 
 class Class:

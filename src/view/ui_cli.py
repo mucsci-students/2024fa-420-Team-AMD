@@ -1,6 +1,66 @@
+import prompt_toolkit
+
 from . import ui_interface
 from model.relationship_model import Type
 from model.command_model import *
+from .singleton import Singleton
+
+# Class that will hold the list of words that the command line
+# can auto complete to. This is only relevant to the CLI so
+# the code lives here for now.
+@Singleton
+class Completions(prompt_toolkit.completion.Completer):
+    def __init__(self):
+        self.tab_completions = []
+
+    def get_tab_completions(self):
+        return self.tab_completions
+
+    def set_tab_completions(self, lst):
+        self.tab_completions = lst
+    
+    def class_completions(self, controller):
+        self.set_tab_completions(controller.editor.getClasses())
+
+    def field_completions(self, controller, class_name):
+        if class_name in controller.editor.classes:
+            class1 = controller.editor.classes[class_name]
+            fields = [f.name for f in class1.fields]
+            self.set_tab_completions(fields)
+        else:
+            self.set_tab_completions([])
+
+    def method_completions(self, controller, class_name):
+        if class_name in controller.editor.classes:
+            class1 = controller.editor.classes[class_name]
+            methods = [m.name for m in class1.methods]
+            self.set_tab_completions(methods)
+        else:
+            self.set_tab_completions([])
+
+    def param_completions(self, controller, class_name, method_name):
+        if class_name in controller.editor.classes:
+            class1 = controller.editor.classes[class_name]
+            if Method(method_name) in class1.methods:
+                idx = class1.methods.index(Method(method_name))
+                method = class1.methods[idx]
+                self.set_tab_completions(method.params)
+            else:
+                self.set_tab_completions([])
+        else:
+            self.set_tab_completions([])
+    
+    def get_completions(self, document, complete_event):
+        text = document.text_before_cursor
+        matches = [option for option in self.tab_completions if option.startswith(text)]
+        for m in matches:
+            yield prompt_toolkit.completion.Completion(m, -len(text))
+    
+    # Similar to python's `input()` except it automatically manages tab completions
+    def tab_input(self, prompt) -> str:
+        session = prompt_toolkit.PromptSession(prompt, completer=self, complete_while_typing=False)
+        text = session.prompt()
+        return text
 
 class CLI(ui_interface.UI):
     def uiFeedback(self, text: str):
@@ -17,36 +77,42 @@ class CLI(ui_interface.UI):
         filename = self.uiQuery('File Name to Open: ')
         return filename
         
-    def uiRun(self, controller):
+    def uiRun(self):
         print('Welcome to our Unified Modeling Language (UML) program! Please enter a valid command.')
+        
+        # This is not an amazing solution, have to repeat changes
+        tab_commands = ['class', 'relationship', 'field', 'method', 'parameter', 'save', 'load', 'undo', 'redo', 'list', 'help', 'exit', 'switch']
         quit = False
         while not quit:
-            command = input('Enter UML Command: ')
+            Completions.instance().set_tab_completions(tab_commands)
+
+            command = Completions.instance().tab_input('Enter UML Command: ')
+
             command = command.strip()
             match command:
                 case 'class':
-                    self.classCommands(controller)
+                    self.classCommands(self.controller)
                 case 'relationship':
-                    self.relationshipCommands(controller)
+                    self.relationshipCommands(self.controller)
                 case 'field':
-                    self.fieldCommands(controller)
+                    self.fieldCommands(self.controller)
                 case 'method':
-                    self.methodCommands(controller)
+                    self.methodCommands(self.controller)
                 case 'parameter':
-                    self.parameterCommands(controller)
+                    self.parameterCommands(self.controller)
                 case 'save':
-                    controller.save()
+                    self.controller.save()
                 case 'load':
-                    controller.load()
+                    self.controller.load()
                 case 'undo':
-                    controller.stepCmd(True)
+                    self.controller.undo()
                 case 'redo':
-                    controller.stepCmd(False)
+                    self.controller.redo()
                 case 'list':
-                    self.listCommands(controller)
+                    self.listCommands(self.controller)
                 case 'help':
                     print('These are valid commands: class, relationship, field, method, parameter, save, load, undo, redo, list, switch, exit.')
-                    controller.editorHelp()
+                    self.controller.editorHelp()
                 case 'exit':
                     quit = True
                     break
@@ -61,7 +127,9 @@ class CLI(ui_interface.UI):
         return text
 
     def classCommands(self, controller):
-        command = input('  Enter Class Command: ')
+        Completions.instance().set_tab_completions(['add', 'delete', 'rename'])
+
+        command = Completions.instance().tab_input('  Enter Class Command: ')
         match command:
             # If command is 'add' it will prompt for a name and attempt to create a new class of that name#
             case 'add':
@@ -70,12 +138,14 @@ class CLI(ui_interface.UI):
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'delete':
-                name = input('  Class to Delete: ')
+                Completions.instance().class_completions(controller)
+                name = Completions.instance().tab_input('  Class to Delete: ')
                 cmd = CommandClassDelete(name)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'rename':
-                name = input('  Class to change: ')
+                Completions.instance().class_completions(controller)
+                name = Completions.instance().tab_input('  Class to change: ')
                 rename = input('    New name: ')
                 cmd = CommandClassRename(name, rename)
                 cmd.execute(controller)
@@ -84,17 +154,22 @@ class CLI(ui_interface.UI):
                 print('Print an error here')
     
     def relationshipCommands(self, controller):
-        command = input('  Enter Relationship Command: ')
+        Completions.instance().set_tab_completions(['add', 'delete', 'edit'])
+
+        command = Completions.instance().tab_input('  Enter Relationship Command: ')
         match command:
             case 'add':
-                class1 = input('  First Class in Relationship: ')
-                class2 = input('  Second Class in Relationship: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  First Class in Relationship: ')
+                class2 = Completions.instance().tab_input('  Second Class in Relationship: ')
                 print('  Type of Relationship:')
                 print(f'    {Type.Aggregate.display()}')
                 print(f'    {Type.Composition.display()}')
                 print(f'    {Type.Inheritance.display()}')
                 print(f'    {Type.Realization.display()}')
-                text = input('  Enter: ').lower()
+
+                Completions.instance().set_tab_completions(Type.tab_completions())
+                text = Completions.instance().tab_input('  Enter: ').lower()
                 typ = Type.make(text)
                 if typ == None:
                     self.uiError(f'Cannot determine relationship type from `{text}`')
@@ -103,20 +178,23 @@ class CLI(ui_interface.UI):
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'delete':
-                class1 = input('  First Class in Relationship to Delete: ')
-                class2 = input('  Second Class in Relationship to Delete: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  First Class in Relationship to Delete: ')
+                class2 = Completions.instance().tab_input('  Second Class in Relationship to Delete: ')
                 cmd = CommandRelationshipDelete(class1, class2)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'edit':
-                class1 = input('  First Class in Relationship: ')
-                class2 = input('  Second Class in Relationship: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  First Class in Relationship: ')
+                class2 = Completions.instance().tab_input('  Second Class in Relationship: ')
                 print('  Type of Relationship to change to:')
                 print(f'    {Type.Aggregate.display()}')
                 print(f'    {Type.Composition.display()}')
                 print(f'    {Type.Inheritance.display()}')
                 print(f'    {Type.Realization.display()}')
-                text = input('  Enter: ').lower()
+                Completions.instance().set_tab_completions(Type.tab_completions())
+                text = Completions.instance().tab_input('  Enter: ').lower()
                 typ = Type.make(text)
                 if typ == None:
                     self.uiError(f'Cannot determine relationship type from `{text}`')
@@ -128,25 +206,35 @@ class CLI(ui_interface.UI):
                 print('Print an error here')
     
     def fieldCommands(self, controller):
-        command = input('  Enter Field Command: ')
+        Completions.instance().set_tab_completions(['add', 'delete', 'rename'])
+
+        command = Completions.instance().tab_input('  Enter Field Command: ')
         match command:
             case 'add':
-                class1 = input('  Class to Add Field To: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class to Add Field To: ')
                 field1 = input('  Field Name: ')
                 cmd = CommandFieldAdd(class1, field1)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'delete':
-                class1 = input('  Class to delete field from: ')
-                field1 = input('  Field to delete: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class to delete field from: ')
+
+                Completions.instance().field_completions(controller, class1)
+                field1 = Completions.instance().tab_input('  Field to delete: ')
+
                 cmd = CommandFieldDelete(class1, field1)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'rename':
-                class1 = input('  Class who\'s field you would like to rename: ')
-                field1 = input('  Field you would like to rename: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class who\'s field you would like to rename: ')
+
+                Completions.instance().field_completions(controller, class1)
+                field1 = Completions.instance().tab_input('  Field you would like to rename: ')
                 field2 = input('  Field name you would like to change to: ')
-                controller.renameField(class1, field1, field2)
+
                 cmd = CommandFieldRename(class1, field1, field2)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
@@ -154,10 +242,13 @@ class CLI(ui_interface.UI):
                 print('Print an error here')
 
     def methodCommands(self, controller):
-        command = input('  Enter Method Command: ')
+        Completions.instance().set_tab_completions(['add', 'delete', 'rename'])
+
+        command = Completions.instance().tab_input('  Enter Method Command: ')
         match command:
             case 'add':
-                class1 = input('  Class to Add Method To: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class to Add Method To: ')
                 method = input('  Method Name: ')
                 param = 'tmp'
                 params = []
@@ -171,14 +262,21 @@ class CLI(ui_interface.UI):
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'delete':
-                class1 = input('  Class to delete method from: ')
-                method = input('  Method to delete: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class to delete method from: ')
+
+                Completions.instance().method_completions(controller, class1)
+                method = Completions.instance().tab_input('  Method to delete: ')
+
                 cmd = CommandMethodDelete(class1, method)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'rename':
-                class1 = input('  Class who\'s method you would like to rename: ')
-                method1 = input('  Method you would like to rename: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class who\'s method you would like to rename: ')
+
+                Completions.instance().method_completions(controller, class1)
+                method1 = Completions.instance().tab_input('  Method you would like to rename: ')
                 method2 = input('  Method name you would like to change to: ')
                 cmd = CommandMethodRename(class1, method1, method2)
                 cmd.execute(controller)
@@ -187,32 +285,53 @@ class CLI(ui_interface.UI):
                 print('Print an error here')
 
     def parameterCommands(self, controller):
-        command = input('  Enter Parameter Command: ')
+        Completions.instance().set_tab_completions(['remove', 'clear', 'rename', 'change'])
+
+        command = Completions.instance().tab_input('  Enter Parameter Command: ')
         match command:
             case 'remove':
-                class1 = input('  Class with the desired Method: ')
-                method = input('  Method to remove parameter from: ')
-                param = input('  Parameter to remove: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class with the desired Method: ')
+
+                Completions.instance().method_completions(controller, class1)
+                method = Completions.instance().tab_input('  Method to remove parameter from: ')
+
+                Completions.instance().param_completions(controller, class1, method)
+                param = Completions.instance().tab_input('  Parameter to remove: ')
+
                 cmd = CommandParameterRemove(class1, method, param)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'clear':
-                class1 = input('  Class with the desired Method: ')
-                method = input('  Method to clear parameters from: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class with the desired Method: ')
+
+                Completions.instance().method_completions(controller, class1)
+                method = Completions.instance().tab_input('  Method to clear parameters from: ')
+
                 cmd = CommandParameterClear(class1, method)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'rename':
-                class1 = input('  Class with the desired Method: ')
-                method = input('  Method to clear parameters from: ')
-                param1 = input('  Parameter to rename: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class with the desired Method: ')
+
+                Completions.instance().method_completions(controller, class1)
+                method = Completions.instance().tab_input('  Method to clear parameters from: ')
+
+                Completions.instance().param_completions(controller, class1, method)
+                param1 = Completions.instance().tab_input('  Parameter to rename: ')
+
                 param2 = input('  New parameter name: ')
                 cmd = CommandParameterRename(class1, method, param1, param2)
                 cmd.execute(controller)
                 controller.editor.pushCmd(cmd)
             case 'change':
-                class1 = input('  Class with the desired Method: ')
-                method = input('  Method with parameters to change: ')
+                Completions.instance().class_completions(controller)
+                class1 = Completions.instance().tab_input('  Class with the desired Method: ')
+
+                Completions.instance().method_completions(controller, class1)
+                method = Completions.instance().tab_input('  Method with parameters to change: ')
                 param = 'tmp'
                 params = []
                 print('  Input a list of parameters in order. Enter a blank name to end the list.')
@@ -228,15 +347,19 @@ class CLI(ui_interface.UI):
                 print('Print an error here')
     
     def listCommands(self, controller):
-        command = input('   Enter List Command: ')
+        Completions.instance().set_tab_completions(['classes', 'class', 'relationships'])
+
+        command = Completions.instance().tab_input('  Enter List Command: ')
         match command:
             case 'classes':
                 controller.listClasses()
             case 'class':
-                name = input('  Enter class: ')
+                Completions.instance().class_completions(controller)
+                name = Completions.instance().tab_input('  Enter class: ')
                 controller.listClass(name)
             case 'relationships':
-                name = input("     Class to check relationships: ")
+                Completions.instance().class_completions(controller)
+                name = Completions.instance().tab_input("     Class to check relationships: ")
                 controller.listRelationships(name)
 
     # Function that lists options and explanations for the basic commands
@@ -244,7 +367,24 @@ class CLI(ui_interface.UI):
     def displayHelp(self) -> bool:
         quit = False
         while not quit:
-            command = input('Enter "exit" to exit help menu or "<command> help" to get details on what actions can be done with each command: ')
+            Completions.instance().set_tab_completions(
+                [
+                    'class help',
+                    'relationship help',
+                    'field help',
+                    'method help',
+                    'parameter help',
+                    'save help',
+                    'load help',
+                    'undo help',
+                    'redo help',
+                    'list help',
+                    'exit',
+                    'switch',
+                ]
+            )
+
+            command = Completions.instance().tab_input('Enter "exit" to exit help menu or "<command> help" to get details on what actions can be done with each command: ')
             command = command.strip()
             match command:
                 case 'class help':

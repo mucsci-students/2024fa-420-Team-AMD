@@ -8,8 +8,7 @@ import json
 import math
 
 class GUI(ui_interface.UI):
-    def __init__(self, controller):
-        self.controller = controller
+    def __init__(self):
         self.silent_mode = False
         self.root = tk.Tk()
         self.root.title("UML Program")
@@ -291,11 +290,14 @@ class GUI(ui_interface.UI):
         button_save = tk.Button(self.toolbar, name="help", text="Help", command=lambda: self.showHelp()) #command=self.relationshipCommands)
         button_save.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_undo = tk.Button(self.toolbar, name="undo", text="Undo", command=lambda: self.controller.stepCmd(True))
+        button_undo = tk.Button(self.toolbar, name="undo", text="Undo", command=lambda: self.controller.undo())
         button_undo.pack(side=tk.LEFT, padx=2, pady=2)
 
-        button_redo = tk.Button(self.toolbar, name="redo", text="Redo", command=lambda: self.controller.stepCmd(False))
+        button_redo = tk.Button(self.toolbar, name="redo", text="Redo", command=lambda: self.controller.redo())
         button_redo.pack(side=tk.LEFT, padx=2, pady=2)
+
+        button_export = tk.Button(self.toolbar, name="export image", text="Export Image", command=lambda: self.controller.export_image())
+        button_export.pack(side=tk.LEFT, padx=2, pady=2)
     
     def updateAccess(self):
         if self.controller.editor.canAddField():
@@ -324,6 +326,20 @@ class GUI(ui_interface.UI):
             b.config(state=tk.NORMAL)
         else:
             b = self.toolbar.nametowidget("relationships")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canUndo():
+            b = self.toolbar.nametowidget("undo")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("undo")
+            b.config(state=tk.DISABLED)
+
+        if self.controller.editor.canRedo():
+            b = self.toolbar.nametowidget("redo")
+            b.config(state=tk.NORMAL)
+        else:
+            b = self.toolbar.nametowidget("redo")
             b.config(state=tk.DISABLED)
 
 
@@ -415,15 +431,16 @@ class GUI(ui_interface.UI):
             for text_method in text_methods:  # Delete all the fields text
                 self.canvas.delete(text_method)
 
-            # Remove any relationship lines connected to this class
-            to_delete = []
-            for (class1, class2) in self.relationship_lines.keys():
-                if class1 == class_name or class2 == class_name:
-                    self.deleteRelationshipLine(class1, class2)
-                    to_delete.append((class1, class2))
-            
-            for key in to_delete:
-                del self.relationship_lines[key]
+            # Collect relationships to delete
+            to_delete = [
+                (class1, class2) for (class1, class2) in self.relationship_lines.keys()
+                if class1 == class_name or class2 == class_name
+            ]
+
+            # Safely delete relationships
+            for (class1, class2) in to_delete:
+                self.deleteRelationshipLine(class1, class2)
+                self.relationship_lines.pop((class1, class2), None)
 
             # Remove the class from the dictionary
             del self.box_positions[class_name]
@@ -871,6 +888,10 @@ class GUI(ui_interface.UI):
 
     # -------------- DIAGNOSTIC FUNCTIONS START ----------------------------------------------------------------
 
+    def uiChooseCanvasLocation(self) -> str:
+        filename = filedialog.asksaveasfilename(title="Select a File", filetypes=[('PNG files', '*.png')])
+        return filename
+    
     def uiChooseSaveLocation(self) -> str:
         filename = tk.filedialog.asksaveasfilename(title="Select a File", filetypes=[("JSON files", "*.JSON")])
         return filename
